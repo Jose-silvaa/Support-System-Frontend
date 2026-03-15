@@ -17,10 +17,13 @@ export function Toaster() {
   return (
     <ChakraToaster toaster={toaster}>
       {(props) => (
-        <Toast.Root>
+        <Toast.Root minW="200px" overflow="visible">
           {props.title != null && <Toast.Title>{props.title}</Toast.Title>}
-          {props.description != null && <Toast.Description>{props.description}</Toast.Description>}
-          <Toast.CloseTrigger />
+          {props.description != null && (
+            <Toast.Description whiteSpace="normal" overflow="visible" wordBreak="break-word">
+              {props.description}
+            </Toast.Description>
+          )}
         </Toast.Root>
       )}
     </ChakraToaster>

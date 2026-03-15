@@ -35,8 +35,8 @@ export const tokens = defineTokens({
     },
   },
   fonts: {
-    heading: { value: "system-ui, sans-serif" },
-    body: { value: "system-ui, sans-serif" },
+    heading: { value: "Nunito, sans-serif" },
+    body: { value: "Nunito, sans-serif" },
     mono: { value: "ui-monospace, monospace" },
   },
   animations: {

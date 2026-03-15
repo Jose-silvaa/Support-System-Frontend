@@ -20,6 +20,7 @@ export interface AuthUser {
   name: string
 }
 
+const AUTH_TOKEN_KEY = "auth_token"
 const MOCK_DELAY_MS = 600
 
 function delay(ms: number): Promise<void> {
@@ -53,19 +54,67 @@ export async function register(data: RegisterData): Promise<AuthUser> {
 
 /**
  * Registo via API (para usar quando tiver backend).
- * O backend pode chamar services/email.service.sendWelcomeEmail após criar o user.
- * Exemplo de rota no backend: POST /api/register -> criar user -> sendWelcomeEmail -> devolver user.
+ * Se o backend devolver um JWT (como no login), guardamos o token para manter a sessão.
  */
 export async function registerViaApi(data: RegisterData): Promise<AuthUser> {
-  return post<AuthUser>("register", data)
+  const result = await post<AuthUser | string>("auth/register", data)
+  if (typeof result === "string") {
+    const token = result
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(AUTH_TOKEN_KEY, token)
+    }
+    const payload = decodeJwtPayload(token)
+    return {
+      id: String(payload.sub ?? payload.id ?? "1"),
+      email: (payload.email as string) ?? data.email,
+      name: (payload.name as string) ?? data.name,
+    }
+  }
+  return result
 }
 
 /** Login via API (exemplo quando tiver backend). */
 export async function loginViaApi(credentials: LoginCredentials): Promise<AuthUser> {
-  return post<AuthUser>("login", credentials)
+  const result = await post<AuthUser | string>("auth/login", credentials)
+  if (typeof result === "string") {
+    const token = result
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(AUTH_TOKEN_KEY, token)
+    }
+    const payload = decodeJwtPayload(token)
+    return {
+      id: String(payload.sub ?? payload.id ?? "1"),
+      email: (payload.email as string) ?? credentials.email,
+      name: (payload.name as string) ?? credentials.email.split("@")[0] ?? "Utilizador",
+    }
+  }
+  return result
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  try {
+    const payload = token.split(".")[1]
+    if (!payload) return {}
+    return JSON.parse(atob(payload)) as Record<string, unknown>
+  } catch {
+    return {}
+  }
 }
 
 /** Simula logout (limpar token, etc.) */
 export function logout(): void {
-  // Em produção: limpar token, invalidar sessão, etc.
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem(AUTH_TOKEN_KEY)
+  }
+}
+
+/** Devolve o token guardado (ou null). */
+export function getAuthToken(): string | null {
+  if (typeof localStorage === "undefined") return null
+  return localStorage.getItem(AUTH_TOKEN_KEY)
+}
+
+/** Indica se existe sessão (token presente). */
+export function isAuthenticated(): boolean {
+  return !!getAuthToken()
 }

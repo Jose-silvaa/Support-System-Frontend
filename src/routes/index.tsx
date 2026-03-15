@@ -1,44 +1,47 @@
+import type { ReactNode } from "react"
 import {
   createBrowserRouter,
   Navigate,
   RouterProvider,
   type RouteObject,
 } from "react-router-dom"
+import { ROUTES } from "./constants"
+import { isAuthenticated } from "@/services/auth/auth.service"
 import { MainLayout } from "@/layout"
-import { HomePage } from "@/pages"
 import { LoginPage } from "@/pages/Login"
 import { RegisterPage } from "@/pages/Register"
 import { DashboardPage } from "@/pages/Dashboard"
 import { DesignSystemPage } from "@/pages/DesignSystem"
 
-/**
- * Definição das rotas da aplicação.
- * Use ROUTES para links e navegação programática.
- */
-export const ROUTES = {
-  HOME: "/",
-  LOGIN: "/login",
-  REGISTER: "/register",
-  DASHBOARD: "/dashboard",
-  DESIGN_SYSTEM: "/design-system",
-} as const
+export { ROUTES } from "./constants"
+export type { AppRoute } from "./constants"
 
-export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES]
+function PublicRoute({ children }: { children: ReactNode }) {
+  if (isAuthenticated()) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />
+  }
+  return <>{children}</>
+}
+
+function PrivateRoute({ children }: { children: ReactNode }) {
+  if (!isAuthenticated()) {
+    return <Navigate to={ROUTES.LOGIN} replace />
+  }
+  return <>{children}</>
+}
 
 const routes: RouteObject[] = [
   {
     path: ROUTES.HOME,
-    element: (
-      <MainLayout>
-        <HomePage />
-      </MainLayout>
-    ),
+    element: <Navigate to={ROUTES.LOGIN} replace />,
   },
   {
     path: ROUTES.LOGIN,
     element: (
       <MainLayout>
-        <LoginPage />
+        <PublicRoute>
+          <LoginPage />
+        </PublicRoute>
       </MainLayout>
     ),
   },
@@ -46,7 +49,9 @@ const routes: RouteObject[] = [
     path: ROUTES.REGISTER,
     element: (
       <MainLayout>
-        <RegisterPage />
+        <PublicRoute>
+          <RegisterPage />
+        </PublicRoute>
       </MainLayout>
     ),
   },
@@ -54,7 +59,9 @@ const routes: RouteObject[] = [
     path: ROUTES.DASHBOARD,
     element: (
       <MainLayout>
-        <DashboardPage />
+        <PrivateRoute>
+          <DashboardPage />
+        </PrivateRoute>
       </MainLayout>
     ),
   },
@@ -62,13 +69,15 @@ const routes: RouteObject[] = [
     path: ROUTES.DESIGN_SYSTEM,
     element: (
       <MainLayout>
-        <DesignSystemPage />
+        <PrivateRoute>
+          <DesignSystemPage />
+        </PrivateRoute>
       </MainLayout>
     ),
   },
   {
     path: "*",
-    element: <Navigate to={ROUTES.HOME} replace />,
+    element: <Navigate to={ROUTES.LOGIN} replace />,
   },
 ]
 
