@@ -39,7 +39,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
   const text = await res.text()
   if (!text) return undefined as T
-  return JSON.parse(text) as T
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    return text as T
+  }
 }
 
 /** GET path */
