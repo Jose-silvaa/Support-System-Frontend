@@ -34,7 +34,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    const message = (err as { message?: string }).message ?? `Erro ${res.status}`
+    const message = (err as { message?: string }).message ?? `Error ${res.status}`
     throw new Error(message)
   }
   const text = await res.text()
