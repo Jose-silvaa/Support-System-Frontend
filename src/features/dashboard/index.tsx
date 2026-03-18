@@ -1,13 +1,22 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import {
   Box,
+  Button,
+  Dialog,
+  Field,
   Flex,
   Heading,
+  Input,
+  Spinner,
   Text,
+  Textarea,
   VStack,
+  HStack,
 } from "@chakra-ui/react"
 import { AppCard } from "@/components"
+import { toaster } from "@/components/ui/toaster"
 import { useTickets } from "@/contexts/TicketContext"
+import type { DashboardCard } from "./interfaces"
 import { TicketStatus } from "./interfaces"
 
 const COLUMNS: {
@@ -33,9 +42,20 @@ const COLUMNS: {
 ]
 
 export function DashboardFeature() {
-  const { tickets: cards, setTickets: setCards } = useTickets()
+  const {
+    tickets: cards,
+    updateTicket,
+    updateTicketStatus,
+    loading,
+    error,
+  } = useTickets()
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetStatus, setDropTargetStatus] = useState<TicketStatus | null>(null)
+  const [editingCard, setEditingCard] = useState<DashboardCard | null>(null)
+  const [editTitle, setEditTitle] = useState("")
+  const [editDescription, setEditDescription] = useState("")
+  const [editResponsible, setEditResponsible] = useState("")
+  const dragJustEndedRef = useRef(false)
 
   function handleDragStart(e: React.DragEvent, cardId: string) {
     e.dataTransfer.setData("application/json", JSON.stringify({ id: cardId }))
@@ -46,6 +66,41 @@ export function DashboardFeature() {
   function handleDragEnd() {
     setDraggedId(null)
     setDropTargetStatus(null)
+    dragJustEndedRef.current = true
+    setTimeout(() => {
+      dragJustEndedRef.current = false
+    }, 150)
+  }
+
+  function handleCardClick(card: DashboardCard) {
+    if (dragJustEndedRef.current) return
+
+    setEditingCard(card)
+    setEditTitle(card.title)
+    setEditDescription(card.description)
+    setEditResponsible(card.responsible ?? "")
+  }
+
+  function handleEditClose() {
+    setEditingCard(null)
+    setEditTitle("")
+    setEditDescription("")
+    setEditResponsible("")
+  }
+
+  async function handleEditSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingCard || !editTitle.trim()) return
+    try {
+      await updateTicket(editingCard.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim(),
+        responsible: editResponsible.trim(),
+      })
+      handleEditClose()
+    } catch {
+      toaster.error({ title: "Error", description: "Failed to update ticket" })
+    }
   }
 
   function handleDragOver(e: React.DragEvent, status: TicketStatus) {
@@ -63,11 +118,7 @@ export function DashboardFeature() {
     setDropTargetStatus(null)
     try {
       const data = JSON.parse(e.dataTransfer.getData("application/json")) as { id: string }
-      setCards((prev) =>
-        prev.map((card) =>
-          card.id === data.id ? { ...card, status: newStatus } : card
-        )
-      )
+      updateTicketStatus(data.id, newStatus)
     } finally {
       setDraggedId(null)
     }
@@ -82,7 +133,18 @@ export function DashboardFeature() {
         Here you can view all tickets created for users in the system.
       </Text>
 
-      <Flex gap="4" align="stretch" minH="400px" flex="1" flexWrap="wrap">
+      {error && (
+        <Box p="3" bg="red.50" color="red.700" borderRadius="md" width="100%">
+          {error}
+        </Box>
+      )}
+
+      {loading ? (
+        <Flex flex="1" align="center" justify="center" minH="200px">
+          <Spinner size="lg" color="purple.500" />
+        </Flex>
+      ) : (
+      <Flex gap="8" align="stretch" minH="400px" flex="1" flexWrap="wrap">
         {COLUMNS.map(({ status, label, accent }) => (
           <Box
             key={status}
@@ -120,21 +182,79 @@ export function DashboardFeature() {
                     draggable
                     onDragStart={(e) => handleDragStart(e, card.id)}
                     onDragEnd={handleDragEnd}
+                    onClick={() => handleCardClick(card)}
                     cursor="grab"
                     _active={{ cursor: "grabbing" }}
+                    _hover={{ opacity: 0.95 }}
                     opacity={draggedId === card.id ? 0.5 : 1}
                     transition="opacity 0.15s"
                     pr={4}
                     pl={4}
                     pt={2}
                   >
-                    <AppCard title={card.title}>{card.content}</AppCard>
+                    <AppCard title={card.title}>
+                      <Text fontSize="sm" color="gray.600">
+                        Responsible: {card.responsible || "—"}
+                      </Text>
+                    </AppCard>
                   </Box>
                 ))}
             </VStack>
           </Box>
         ))}
       </Flex>
+      )}
+
+      <Dialog.Root
+        open={!!editingCard}
+        onOpenChange={(e) => !e.open && handleEditClose()}
+        size="md"
+      >
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Box borderRadius="lg" overflow="hidden" bg="bg" color="fg">
+              <AppCard title="Edit ticket">
+                <form onSubmit={handleEditSubmit}>
+                  <Field.Root mb="4">
+                    <Field.Label>Title</Field.Label>
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Ticket title"
+                    />
+                  </Field.Root>
+                  <Field.Root mb="4">
+                    <Field.Label>Responsible</Field.Label>
+                    <Input
+                      value={editResponsible}
+                      onChange={(e) => setEditResponsible(e.target.value)}
+                      placeholder="Who is responsible"
+                    />
+                  </Field.Root>
+                  <Field.Root mb="4">
+                    <Field.Label>Description</Field.Label>
+                    <Textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="Description..."
+                      rows={4}
+                    />
+                  </Field.Root>
+                  <HStack gap="2" justify="flex-end">
+                    <Button type="button" variant="outline" size="sm" onClick={handleEditClose}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" size="sm" colorPalette="purple">
+                      Save
+                    </Button>
+                  </HStack>
+                </form>
+              </AppCard>
+            </Box>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
     </VStack>
   )
 }

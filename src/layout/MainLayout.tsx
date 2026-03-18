@@ -13,6 +13,7 @@ import {
   Textarea,
 } from "@chakra-ui/react"
 import { AppCard } from "@/components"
+import { toaster } from "@/components/ui/toaster"
 import { TicketProvider, useTickets } from "@/contexts/TicketContext"
 import { ROUTES } from "@/routes"
 import { getCurrentUser, isAuthenticated, logout } from "@/services/auth/auth.service"
@@ -43,24 +44,41 @@ interface MainLayoutProps {
 
 function CreateTicketTriggerAndModal() {
   const { addTicket } = useTickets()
+  const currentUser = getCurrentUser()
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
+  const [description, setDescription] = useState("")
+  const [responsible, setResponsible] = useState("")
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleOpen() {
+    setResponsible(currentUser?.name ?? "")
+    setOpen(true)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim()) return
-    addTicket({ title: title.trim(), content: content.trim() })
-    setTitle("")
-    setContent("")
-    setOpen(false)
+    try {
+      await addTicket({
+        title: title.trim(),
+        description: description,
+        responsible: responsible.trim(),
+      })
+      setTitle("")
+      setDescription("")
+      setResponsible("")
+      setOpen(false)
+    } catch {
+      toaster.error({ title: "Error", description: "Failed to create ticket" })
+    }
   }
 
   function handleOpenChange(e: { open: boolean }) {
     setOpen(e.open)
     if (!e.open) {
       setTitle("")
-      setContent("")
+      setDescription("")
+      setResponsible("")
     }
   }
 
@@ -71,7 +89,7 @@ function CreateTicketTriggerAndModal() {
         bg="white"
         color={HEADER_PURPLE}
         _hover={{ bg: "whiteAlpha.900" }}
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
       >
         Create ticket
       </Button>
@@ -92,10 +110,18 @@ function CreateTicketTriggerAndModal() {
                     />
                   </Field.Root>
                   <Field.Root mb="4">
+                    <Field.Label>Responsible</Field.Label>
+                    <Input
+                      value={responsible}
+                      onChange={(e) => setResponsible(e.target.value)}
+                      placeholder="Who is responsible"
+                    />
+                  </Field.Root>
+                  <Field.Root mb="4">
                     <Field.Label>Description</Field.Label>
                     <Textarea
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
                       placeholder="Description..."
                       rows={4}
                     />

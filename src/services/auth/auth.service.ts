@@ -64,10 +64,11 @@ export async function registerViaApi(data: RegisterData): Promise<AuthUser> {
       localStorage.setItem(AUTH_TOKEN_KEY, token)
     }
     const payload = decodeJwtPayload(token)
+    const email = getClaim(payload, CLAIM_EMAIL, "email") || data.email
     return {
-      id: String(payload.sub ?? payload.id ?? "1"),
-      email: (payload.email as string) ?? data.email,
-      name: (payload.name as string) ?? data.name,
+      id: getClaim(payload, CLAIM_NAME_ID, "sub", "id") || "1",
+      email,
+      name: getClaim(payload, "name") || data.name,
     }
   }
   return result
@@ -82,14 +83,19 @@ export async function loginViaApi(credentials: LoginCredentials): Promise<AuthUs
       localStorage.setItem(AUTH_TOKEN_KEY, token)
     }
     const payload = decodeJwtPayload(token)
+    const email = getClaim(payload, CLAIM_EMAIL, "email") || credentials.email
     return {
-      id: String(payload.sub ?? payload.id ?? "1"),
-      email: (payload.email as string) ?? credentials.email,
-      name: (payload.name as string) ?? credentials.email.split("@")[0] ?? "User",
+      id: getClaim(payload, CLAIM_NAME_ID, "sub", "id") || "1",
+      email,
+      name: getClaim(payload, "name") || credentials.email.split("@")[0] || "User",
     }
   }
   return result
 }
+
+/** .NET-style JWT claim type URIs (backend may use these) */
+const CLAIM_NAME_ID = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+const CLAIM_EMAIL = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
   try {
@@ -99,6 +105,14 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
   } catch {
     return {}
   }
+}
+
+function getClaim(payload: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    const v = payload[key]
+    if (v != null && typeof v === "string") return v
+  }
+  return ""
 }
 
 /** Simula logout (limpar token, etc.) */
@@ -124,11 +138,11 @@ export function getCurrentUser(): AuthUser | null {
   const token = getAuthToken()
   if (!token) return null
   const payload = decodeJwtPayload(token)
-  const email = (payload.email as string) ?? ""
-  const name = (payload.name as string) ?? email.split("@")[0] ?? "?"
-  console.log("payload.email", payload)
+  const id = getClaim(payload, CLAIM_NAME_ID, "sub", "id") || "?"
+  const email = getClaim(payload, CLAIM_EMAIL, "email") || ""
+  const name = getClaim(payload, "name") || (email ? email.split("@")[0] : "") || "?"
   return {
-    id: String(payload.sub ?? payload.id ?? "1"),
+    id,
     email: email || "?",
     name: name || "?",
   }

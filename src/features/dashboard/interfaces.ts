@@ -9,8 +9,10 @@ export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
 export interface DashboardCard {
   id: string
   title: string
-  content: string
+  description: string
   status: TicketStatus
+  /** Person responsible / who created the ticket */
+  responsible: string
 }
 
 export interface DashboardFeatureProps {

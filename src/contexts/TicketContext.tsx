@@ -1,46 +1,129 @@
 import type { ReactNode } from "react"
-import { createContext, useCallback, useContext, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useState } from "react"
 import type { DashboardCard } from "@/features/dashboard/interfaces"
 import { TicketStatus } from "@/features/dashboard/interfaces"
-
-const INITIAL_TICKETS: DashboardCard[] = [
-  { id: "1", title: "Card 1", content: "Content 1", status: TicketStatus.Open },
-  { id: "2", title: "Card 2", content: "Content 2", status: TicketStatus.Open },
-  { id: "3", title: "Card 3", content: "Content 3", status: TicketStatus.InProgress },
-  { id: "4", title: "Card 4", content: "Content 4", status: TicketStatus.Closed },
-  { id: "5", title: "Card 5", content: "Content 5", status: TicketStatus.Open },
-  { id: "6", title: "Card 6", content: "Content 6", status: TicketStatus.InProgress },
-  { id: "7", title: "Card 7", content: "Content 7", status: TicketStatus.Closed },
-  { id: "8", title: "Card 8", content: "Content 8", status: TicketStatus.Open },
-  { id: "9", title: "Card 9", content: "Content 9", status: TicketStatus.InProgress },
-  { id: "10", title: "Card 10", content: "Content 10", status: TicketStatus.Closed },
-]
+import * as ticketsService from "@/services/tickets/tickets.service"
 
 interface TicketContextValue {
   tickets: DashboardCard[]
   setTickets: React.Dispatch<React.SetStateAction<DashboardCard[]>>
-  addTicket: (data: { title: string; content: string }) => void
+  addTicket: (data: { title: string; description: string; responsible?: string }) => Promise<void>
+  updateTicket: (
+    id: string,
+    data: { title: string; description: string; responsible?: string }
+  ) => Promise<void>
+  updateTicketStatus: (id: string, status: TicketStatus) => Promise<void>
+  loading: boolean
+  error: string | null
+  loadTickets: () => Promise<void>
 }
 
 const TicketContext = createContext<TicketContextValue | null>(null)
 
 export function TicketProvider({ children }: { children: ReactNode }) {
-  const [tickets, setTickets] = useState<DashboardCard[]>(INITIAL_TICKETS)
+  const [tickets, setTickets] = useState<DashboardCard[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const addTicket = useCallback((data: { title: string; content: string }) => {
-    setTickets((prev) => [
-      ...prev,
-      {
-        id: String(Date.now()),
-        title: data.title,
-        content: data.content,
-        status: TicketStatus.Open,
-      },
-    ])
+  const loadTickets = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await ticketsService.listTickets()
+      setTickets(data)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to load tickets"
+      setError(message)
+      setTickets([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadTickets()
+  }, [loadTickets])
+
+  const addTicket = useCallback(
+    async (data: { title: string; description: string; responsible?: string }) => {
+      setError(null)
+      try {
+        const created = await ticketsService.createTicket({
+          title: data.title,
+          description: data.description,
+          responsible: data.responsible,
+        })
+        setTickets((prev) => [...prev, created])
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Failed to create ticket"
+        setError(message)
+        throw e
+      }
+    },
+    []
+  )
+
+  const updateTicket = useCallback(
+    async (
+      id: string,
+      data: { title: string; description: string; responsible?: string }
+    ) => {
+      setError(null)
+      try {
+        const updated = await ticketsService.updateTicket(id, {
+          title: data.title,
+          description: data.description,
+          responsible: data.responsible,
+        })
+        setTickets((prev) =>
+          prev.map((t) => (t.id === id ? updated : t))
+        )
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Failed to update ticket"
+        setError(message)
+        throw e
+      }
+    },
+    []
+  )
+
+  const updateTicketStatus = useCallback(async (id: string, status: TicketStatus) => {
+    setError(null)
+    let previous: DashboardCard | undefined
+    setTickets((state) => {
+      previous = state.find((t) => t.id === id)
+      if (!previous) return state
+      return state.map((t) => (t.id === id ? { ...t, status } : t))
+    })
+    try {
+      const updated = await ticketsService.updateTicket(id, { status })
+      setTickets((state) =>
+        state.map((t) => (t.id === id ? updated : t))
+      )
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to update status"
+      setError(message)
+      if (previous) {
+        setTickets((state) =>
+          state.map((t) => (t.id === id ? previous! : t))
+        )
+      }
+    }
   }, [])
 
   return (
-    <TicketContext.Provider value={{ tickets, setTickets, addTicket }}>
+    <TicketContext.Provider
+      value={{
+        tickets,
+        setTickets,
+        addTicket,
+        updateTicket,
+        updateTicketStatus,
+        loading,
+        error,
+        loadTickets,
+      }}
+    >
       {children}
     </TicketContext.Provider>
   )
