@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Box,
   Button,
@@ -7,15 +7,21 @@ import {
   Flex,
   Heading,
   Input,
+  NativeSelect,
   Spinner,
   Text,
   Textarea,
   VStack,
   HStack,
 } from "@chakra-ui/react"
-import { AppCard } from "@/components"
+import { AppCard, CreateTicketModal } from "@/components"
 import { toaster } from "@/components/ui/toaster"
 import { useTickets } from "@/contexts/TicketContext"
+import {
+  getAssignableUsers,
+  getAssignableUserLabel,
+  type AssignableUser,
+} from "@/services/users/users.service"
 import type { DashboardCard } from "./interfaces"
 import { TicketStatus } from "./interfaces"
 
@@ -55,7 +61,16 @@ export function DashboardFeature() {
   const [editTitle, setEditTitle] = useState("")
   const [editDescription, setEditDescription] = useState("")
   const [editResponsible, setEditResponsible] = useState("")
+  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([])
   const dragJustEndedRef = useRef(false)
+
+  useEffect(() => {
+    if (editingCard) {
+      getAssignableUsers()
+        .then(setAssignableUsers)
+        .catch(() => setAssignableUsers([]))
+    }
+  }, [editingCard])
 
   function handleDragStart(e: React.DragEvent, cardId: string) {
     e.dataTransfer.setData("application/json", JSON.stringify({ id: cardId }))
@@ -126,12 +141,17 @@ export function DashboardFeature() {
 
   return (
     <VStack align="stretch" gap="6">
-      <Heading size="xl" textStyle="headline">
-        Dashboard
-      </Heading>
-      <Text textStyle="body">
-        Here you can view all tickets created for users in the system.
-      </Text>
+      <Flex justify="space-between" align="center" gap="4" flexWrap="wrap">
+        <Box>
+          <Heading size="xl" textStyle="headline">
+            Dashboard
+          </Heading>
+          <Text textStyle="body" mt="1">
+            Here you can view all tickets created for users in the system.
+          </Text>
+        </Box>
+        <CreateTicketModal variant="page" />
+      </Flex>
 
       {error && (
         <Box p="3" bg="red.50" color="red.700" borderRadius="md" width="100%">
@@ -194,7 +214,7 @@ export function DashboardFeature() {
                   >
                     <AppCard title={card.title}>
                       <Text fontSize="sm" color="gray.600">
-                        Responsible: {card.responsible || "—"}
+                        Responsible: {card.responsible ? getAssignableUserLabel({ id: card.responsible }) : "—"}
                       </Text>
                     </AppCard>
                   </Box>
@@ -226,11 +246,20 @@ export function DashboardFeature() {
                   </Field.Root>
                   <Field.Root mb="4">
                     <Field.Label>Responsible</Field.Label>
-                    <Input
-                      value={editResponsible}
-                      onChange={(e) => setEditResponsible(e.target.value)}
-                      placeholder="Who is responsible"
-                    />
+                    <NativeSelect.Root>
+                      <NativeSelect.Field
+                        value={editResponsible}
+                        onChange={(e) => setEditResponsible(e.target.value)}
+                      >
+                        <option value="">Unassigned</option>
+                        {assignableUsers.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {getAssignableUserLabel(u)}
+                          </option>
+                        ))}
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
                   </Field.Root>
                   <Field.Root mb="4">
                     <Field.Label>Description</Field.Label>

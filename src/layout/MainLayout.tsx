@@ -1,20 +1,7 @@
 import type { ReactNode } from "react"
-import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import {
-  Box,
-  Button,
-  Container,
-  Dialog,
-  Field,
-  Heading,
-  HStack,
-  Input,
-  Textarea,
-} from "@chakra-ui/react"
-import { AppCard } from "@/components"
-import { toaster } from "@/components/ui/toaster"
-import { TicketProvider, useTickets } from "@/contexts/TicketContext"
+import { Box, Button, Container, Heading, HStack, Input } from "@chakra-ui/react"
+import { TicketProvider } from "@/contexts/TicketContext"
 import { ROUTES } from "@/routes"
 import { getCurrentUser, isAuthenticated, logout } from "@/services/auth/auth.service"
 
@@ -40,113 +27,6 @@ function getInitials(name: string, email: string): string {
 
 interface MainLayoutProps {
   children: ReactNode
-}
-
-function CreateTicketTriggerAndModal() {
-  const { addTicket } = useTickets()
-  const currentUser = getCurrentUser()
-  const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [responsible, setResponsible] = useState("")
-
-  function handleOpen() {
-    setResponsible(currentUser?.name ?? "")
-    setOpen(true)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!title.trim()) return
-    try {
-      await addTicket({
-        title: title.trim(),
-        description: description,
-        responsible: responsible.trim(),
-      })
-      setTitle("")
-      setDescription("")
-      setResponsible("")
-      setOpen(false)
-    } catch {
-      toaster.error({ title: "Error", description: "Failed to create ticket" })
-    }
-  }
-
-  function handleOpenChange(e: { open: boolean }) {
-    setOpen(e.open)
-    if (!e.open) {
-      setTitle("")
-      setDescription("")
-      setResponsible("")
-    }
-  }
-
-  return (
-    <>
-      <Button
-        size="sm"
-        bg="white"
-        color={HEADER_PURPLE}
-        _hover={{ bg: "whiteAlpha.900" }}
-        onClick={handleOpen}
-      >
-        Create ticket
-      </Button>
-      <Dialog.Root open={open} onOpenChange={handleOpenChange} size="md">
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <Box borderRadius="lg" overflow="hidden" bg="bg" color="fg">
-              <AppCard title="New ticket">
-                <form onSubmit={handleSubmit}>
-                  <Field.Root mb="4">
-                    <Field.Label>Title</Field.Label>
-                    <Input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Ticket title"
-                      autoFocus
-                    />
-                  </Field.Root>
-                  <Field.Root mb="4">
-                    <Field.Label>Responsible</Field.Label>
-                    <Input
-                      value={responsible}
-                      onChange={(e) => setResponsible(e.target.value)}
-                      placeholder="Who is responsible"
-                    />
-                  </Field.Root>
-                  <Field.Root mb="4">
-                    <Field.Label>Description</Field.Label>
-                    <Textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Description..."
-                      rows={4}
-                    />
-                  </Field.Root>
-                  <HStack gap="2" justify="flex-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" size="sm" colorPalette="purple">
-                      Create
-                    </Button>
-                  </HStack>
-                </form>
-              </AppCard>
-            </Box>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Dialog.Root>
-    </>
-  )
 }
 
 /**
@@ -206,7 +86,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <HStack gap="3" as="nav" color="white">
                   {isAuthenticated() && (
                     <>
-                      <CreateTicketTriggerAndModal />
                       {(() => {
                         const user = getCurrentUser()
                         return user ? (
