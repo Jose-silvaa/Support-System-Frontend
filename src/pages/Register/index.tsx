@@ -36,12 +36,12 @@ export function RegisterPage() {
     setLoading(true)
     try {
       await registerViaApi({ name, email, password })
-      toaster.success({ title: "Conta criada" })
+      toaster.success({ title: "Account created" })
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar conta"
+      const msg = err instanceof Error ? err.message : "Error creating account"
       setError(msg)
-      toaster.error({ title: "Erro", description: msg })
+      toaster.error({ title: "Error", description: msg })
     } finally {
       setLoading(false)
     }

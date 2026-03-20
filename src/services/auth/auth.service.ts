@@ -31,20 +31,20 @@ function delay(ms: number): Promise<void> {
 export async function login(credentials: LoginCredentials): Promise<AuthUser> {
   await delay(MOCK_DELAY_MS)
   if (!credentials.email.trim()) {
-    throw new Error("Email é obrigatório")
+    throw new Error("Email is required")
   }
   return {
     id: "1",
     email: credentials.email,
-    name: credentials.email.split("@")[0] ?? "Utilizador",
+    name: credentials.email.split("@")[0] ?? "User",
   }
 }
 
 /** Simula registo: aceita name + email + password e devolve o user */
 export async function register(data: RegisterData): Promise<AuthUser> {
   await delay(MOCK_DELAY_MS)
-  if (!data.email.trim()) throw new Error("Email é obrigatório")
-  if (!data.name.trim()) throw new Error("Nome é obrigatório")
+  if (!data.email.trim()) throw new Error("Email is required")
+  if (!data.name.trim()) throw new Error("Name is required")
   return {
     id: String(Date.now()),
     email: data.email,
@@ -64,10 +64,11 @@ export async function registerViaApi(data: RegisterData): Promise<AuthUser> {
       localStorage.setItem(AUTH_TOKEN_KEY, token)
     }
     const payload = decodeJwtPayload(token)
+    const email = getClaim(payload, CLAIM_EMAIL, "email") || data.email
     return {
-      id: String(payload.sub ?? payload.id ?? "1"),
-      email: (payload.email as string) ?? data.email,
-      name: (payload.name as string) ?? data.name,
+      id: getClaim(payload, CLAIM_NAME_ID, "sub", "id") || "1",
+      email,
+      name: getClaim(payload, "name") || data.name,
     }
   }
   return result
@@ -82,14 +83,19 @@ export async function loginViaApi(credentials: LoginCredentials): Promise<AuthUs
       localStorage.setItem(AUTH_TOKEN_KEY, token)
     }
     const payload = decodeJwtPayload(token)
+    const email = getClaim(payload, CLAIM_EMAIL, "email") || credentials.email
     return {
-      id: String(payload.sub ?? payload.id ?? "1"),
-      email: (payload.email as string) ?? credentials.email,
-      name: (payload.name as string) ?? credentials.email.split("@")[0] ?? "Utilizador",
+      id: getClaim(payload, CLAIM_NAME_ID, "sub", "id") || "1",
+      email,
+      name: getClaim(payload, "name") || credentials.email.split("@")[0] || "User",
     }
   }
   return result
 }
+
+/** .NET-style JWT claim type URIs (backend may use these) */
+const CLAIM_NAME_ID = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+const CLAIM_EMAIL = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
   try {
@@ -99,6 +105,14 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
   } catch {
     return {}
   }
+}
+
+function getClaim(payload: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    const v = payload[key]
+    if (v != null && typeof v === "string") return v
+  }
+  return ""
 }
 
 /** Simula logout (limpar token, etc.) */
@@ -117,4 +131,19 @@ export function getAuthToken(): string | null {
 /** Indica se existe sessão (token presente). */
 export function isAuthenticated(): boolean {
   return !!getAuthToken()
+}
+
+/** Devolve o utilizador atual a partir do token (ou null se não autenticado). */
+export function getCurrentUser(): AuthUser | null {
+  const token = getAuthToken()
+  if (!token) return null
+  const payload = decodeJwtPayload(token)
+  const id = getClaim(payload, CLAIM_NAME_ID, "sub", "id") || "?"
+  const email = getClaim(payload, CLAIM_EMAIL, "email") || ""
+  const name = getClaim(payload, "name") || (email ? email.split("@")[0] : "") || "?"
+  return {
+    id,
+    email: email || "?",
+    name: name || "?",
+  }
 }

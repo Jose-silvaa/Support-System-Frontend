@@ -1,33 +1,32 @@
 import type { ReactNode } from "react"
-import { NavLink, useLocation, useNavigate } from "react-router-dom"
-import { Box, Button, Container, Heading, HStack } from "@chakra-ui/react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { Box, Button, Container, Heading, HStack, Input } from "@chakra-ui/react"
+import { TicketProvider } from "@/contexts/TicketContext"
 import { ROUTES } from "@/routes"
-import { isAuthenticated, logout } from "@/services/auth/auth.service"
+import { getCurrentUser, isAuthenticated, logout } from "@/services/auth/auth.service"
 
 /** Rotas em que o menu de navegação não é exibido. */
 const PUBLIC_ROUTES: string[] = [ROUTES.HOME, ROUTES.LOGIN, ROUTES.REGISTER]
 
-interface MainLayoutProps {
-  children: ReactNode
+/** Roxo do header (igual à página de login). */
+const HEADER_PURPLE = "#925fe2"
+
+function getInitials(name: string, email: string): string {
+  const fromName = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((s) => s[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+  if (fromName) return fromName
+  if (email.trim()) return email[0].toUpperCase()
+  return "?"
 }
 
-function NavItem({ to, children }: { to: string; children: ReactNode }) {
-  const location = useLocation()
-  const isActive = location.pathname === to
-  return (
-    <NavLink to={to} style={{ textDecoration: "none", color: "inherit" }}>
-      <Box
-        px="3"
-        py="2"
-        borderRadius="md"
-        bg={isActive ? "gray.100" : undefined}
-        _dark={{ bg: isActive ? "gray.800" : undefined }}
-        _hover={{ bg: "gray.100", _dark: { bg: "gray.800" } }}
-      >
-        {children}
-      </Box>
-    </NavLink>
-  )
+interface MainLayoutProps {
+  children: ReactNode
 }
 
 /**
@@ -38,58 +37,96 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname)
+  const isAuthPage =
+    location.pathname === ROUTES.LOGIN || location.pathname === ROUTES.REGISTER
 
   function handleLogout() {
     logout()
     navigate(ROUTES.LOGIN)
   }
 
-  const isAuthPage =
-    location.pathname === ROUTES.LOGIN || location.pathname === ROUTES.REGISTER
-
-  return (
-    <Box
-      minH="100vh"
-      bg={isAuthPage ? "transparent" : "bg"}
-      color="fg"
-    >
-      {!isPublicRoute && (
-        <Box as="header" borderBottomWidth="1px" borderColor="border" py="3" px="4">
-          <Container maxW="container.xl">
-            <HStack gap="6" justify="space-between" flexWrap="wrap">
-              <Heading size="md" fontWeight="semibold">
-                Boilerplate React Vite
-              </Heading>
-              <HStack gap="2" as="nav">
-                <NavItem to={ROUTES.HOME}>Home</NavItem>
-                <NavItem to={ROUTES.LOGIN}>Login</NavItem>
-                <NavItem to={ROUTES.REGISTER}>Registo</NavItem>
-                <NavItem to={ROUTES.DASHBOARD}>Dashboard</NavItem>
-                <NavItem to={ROUTES.DESIGN_SYSTEM}>Design System</NavItem>
-                {isAuthenticated() && (
-                  <Button
-                    variant="outline"
-                    colorPalette="red"
-                    size="sm"
-                    onClick={handleLogout}
-                  >
-                    Sair
-                  </Button>
-                )}
-              </HStack>
-            </HStack>
-          </Container>
-        </Box>
-      )}
-      {isAuthPage ? (
+  if (isAuthPage) {
+    return (
+      <Box minH="100vh" bg="transparent" color="fg">
         <Box as="main" minH="100vh" py="0" px="0">
           {children}
         </Box>
-      ) : (
+      </Box>
+    )
+  }
+
+  return (
+    <TicketProvider>
+      <Box minH="100vh" bg="bg" color="fg">
+        {!isPublicRoute && (
+          <Box
+            as="header"
+            bg={HEADER_PURPLE}
+            color="white"
+            borderBottomWidth="1px"
+            borderColor="whiteAlpha.200"
+            py="3"
+            px="4"
+          >
+            <Container maxW="container.xl">
+              <HStack gap="4" justify="space-between" flexWrap="wrap">
+                <Heading size="md" fontWeight="semibold" color="white">
+                  Ticket Desk
+                </Heading>
+                <Input
+                  placeholder="Search..."
+                  maxW="500px"
+                  size="sm"
+                  bg="whiteAlpha.200"
+                  border="none"
+                  color="white"
+                  _placeholder={{ color: "whiteAlpha.700" }}
+                  _focus={{ bg: "whiteAlpha.300", boxShadow: "none" }}
+                />
+                <HStack gap="3" as="nav" color="white">
+                  {isAuthenticated() && (
+                    <>
+                      {(() => {
+                        const user = getCurrentUser()
+                        return user ? (
+                          <Box
+                            title={user.name || user.email}
+                            w="8"
+                            h="8"
+                            borderRadius="full"
+                            bg="whiteAlpha.300"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            fontSize="xs"
+                            fontWeight="semibold"
+                            flexShrink={0}
+                          >
+                            {getInitials(user.name, user.email)}
+                          </Box>
+                        ) : null
+                      })()}
+                      <Button
+                        variant="outline"
+                        color="white"
+                        bg="red.500"
+                        size="sm"
+                        _hover={{ bg: "red.600" }}
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </Button>
+                    </>
+                  )}
+                </HStack>
+              </HStack>
+            </Container>
+          </Box>
+        )}
         <Box as="main" py="8" px="4">
           <Container maxW="container.xl">{children}</Container>
         </Box>
-      )}
-    </Box>
+      </Box>
+    </TicketProvider>
   )
 }

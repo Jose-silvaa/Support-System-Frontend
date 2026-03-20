@@ -35,12 +35,12 @@ export function LoginPage() {
     setLoading(true)
     try {
       await loginViaApi({ email, password })
-      toaster.success({ title: "Sessão iniciada" })
+      toaster.success({ title: "Signed in" })
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao iniciar sessão"
+      const msg = err instanceof Error ? err.message : "Error signing in"
       setError(msg)
-      toaster.error({ title: "Erro", description: msg })
+      toaster.error({ title: "Error", description: msg })
     } finally {
       setLoading(false)
     }

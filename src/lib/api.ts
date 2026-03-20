@@ -1,9 +1,23 @@
 /**
  * Cliente API e helpers para chamadas HTTP.
  * Use request() em serviços para manter base URL e headers consistentes.
+ * Call setAuthTokenGetter() at app bootstrap so authenticated requests get Bearer token.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/"
+
+let authTokenGetter: () => string | null = () => null
+
+/** Set the function used to get the auth token (e.g. from auth.service). Avoids circular dependency. */
+export function setAuthTokenGetter(getter: () => string | null): void {
+  authTokenGetter = getter
+}
+
+function getAuthHeaders(): Record<string, string> {
+  const token = authTokenGetter()
+  if (!token) return {}
+  return { Authorization: `Bearer ${token}` }
+}
 
 export function getApiUrl(path: string): string {
   return `${API_BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`
@@ -28,13 +42,14 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     method,
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
       ...headers,
     },
     ...(body != null && { body: JSON.stringify(body) }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    const message = (err as { message?: string }).message ?? `Erro ${res.status}`
+    const message = (err as { message?: string }).message ?? `Error ${res.status}`
     throw new Error(message)
   }
   const text = await res.text()
