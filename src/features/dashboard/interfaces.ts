@@ -12,7 +12,7 @@ export interface DashboardCard {
   description: string
   status: TicketStatus
   /** Person responsible / who created the ticket */
-  responsible: string
+  userId: string
 }
 
 export interface DashboardFeatureProps {

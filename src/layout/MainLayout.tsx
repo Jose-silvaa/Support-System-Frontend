@@ -73,16 +73,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <Heading size="md" fontWeight="semibold" color="white">
                   Ticket Desk
                 </Heading>
-                <Input
-                  placeholder="Search..."
-                  maxW="500px"
-                  size="sm"
-                  bg="whiteAlpha.200"
-                  border="none"
-                  color="white"
-                  _placeholder={{ color: "whiteAlpha.700" }}
-                  _focus={{ bg: "whiteAlpha.300", boxShadow: "none" }}
-                />
                 <HStack gap="3" as="nav" color="white">
                   {isAuthenticated() && (
                     <>

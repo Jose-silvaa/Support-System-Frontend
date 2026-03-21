@@ -4,12 +4,13 @@
 
 import { get } from "@/lib/api"
 
-const ASSIGNABLE_USERS_PATH = "user/assignable-users"
+const USERS_PATH = "user"
 
 export interface AssignableUser {
   id: string
   name?: string
   email?: string
+  userId?: string
 }
 
 function toAssignableUser(raw: Record<string, unknown>): AssignableUser {
@@ -22,12 +23,12 @@ function toAssignableUser(raw: Record<string, unknown>): AssignableUser {
 /** Display label for dropdown (name or email or id fallback). */
 export function getAssignableUserLabel(user: AssignableUser): string {
   if (user.email?.trim()) return user.email.trim()
-  return user.id || "—"
+  return user.email || "-"
 }
 
 /** GET user/assignable-users — list users that can be assigned to tickets. */
 export async function getAssignableUsers(): Promise<AssignableUser[]> {
-  const res = await get<AssignableUser[] | { data: unknown[] }>(ASSIGNABLE_USERS_PATH)
+  const res = await get<AssignableUser[] | { data: unknown[] }>(`${USERS_PATH}/assignable`)
   if (Array.isArray(res)) {
     return res.map((u) => toAssignableUser(u as unknown as Record<string, unknown>))
   }

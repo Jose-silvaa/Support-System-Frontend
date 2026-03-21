@@ -17,13 +17,8 @@ export function Toaster() {
   return (
     <ChakraToaster toaster={toaster}>
       {(props) => (
-        <Toast.Root minW="200px" overflow="visible">
-          {props.title != null && <Toast.Title>{props.title}</Toast.Title>}
-          {props.description != null && (
-            <Toast.Description whiteSpace="normal" overflow="visible" wordBreak="break-word">
-              {props.description}
-            </Toast.Description>
-          )}
+        <Toast.Root minW="300px" overflow="visible">
+          {props.title != null && <Toast.Title>{props.description}</Toast.Title>}
         </Toast.Root>
       )}
     </ChakraToaster>
