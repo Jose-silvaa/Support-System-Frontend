@@ -9,33 +9,39 @@ import { TicketStatus } from "@/features/dashboard/interfaces"
 
 const TICKETS_PATH = "ticket"
 
+
 export interface CreateTicketBody {
   title: string
   description: string
-  responsible?: string
+  userId?: string
 }
 
 export interface UpdateTicketBody {
   title?: string
   description?: string
-  responsible?: string
+  userId?: string
   status?: TicketStatus
 }
 
 /** Normalize API response to DashboardCard (handles id as number from backend). */
 function toDashboardCard(raw: Record<string, unknown>): DashboardCard {
+
+  if(raw.success === false) {
+    throw new Error(raw.message as string);
+  }
+
   return {
     id: String(raw.id ?? ""),
     title: String(raw.title ?? ""),
     description: String(raw.description ?? ""),
     status: Number(raw.status) as TicketStatus,
-    responsible: String(raw.responsible ?? ""),
+    userId: String(raw.userId ?? ""),
   }
 }
 
 /** GET /tickets — list all tickets. Handles array or { data: [] }. */
 export async function listTickets(): Promise<DashboardCard[]> {
-  const res = await get<DashboardCard[] | { data: DashboardCard[] }>(TICKETS_PATH)
+  const res = await get<DashboardCard[] | { data: DashboardCard[] }>(`${TICKETS_PATH}/getAllTickets`)
   if (Array.isArray(res)) {
     return res.map((t) => toDashboardCard(t as unknown as Record<string, unknown>))
   }
@@ -43,14 +49,13 @@ export async function listTickets(): Promise<DashboardCard[]> {
   return Array.isArray(data) ? data.map((t) => toDashboardCard(t as Record<string, unknown>)) : []
 }
 
-/** POST /tickets — create a ticket. Returns created ticket. */
-export async function createTicket(body: CreateTicketBody): Promise<DashboardCard> {
-  const raw = await post<Record<string, unknown>>(TICKETS_PATH, {
+/** POST /tickets — create a ticket. Endpoint returns no body. */
+export async function createTicket(body: CreateTicketBody): Promise<void> {
+  await post(`${TICKETS_PATH}/create`, {
     title: body.title,
     description: body.description,
-    responsible: body.responsible ?? "",
+    userId: body.userId ?? "",
   })
-  return toDashboardCard(raw)
 }
 
 /** PATCH /tickets/:id — update ticket (partial). Returns updated ticket. */

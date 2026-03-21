@@ -7,14 +7,15 @@ import * as ticketsService from "@/services/tickets/tickets.service"
 interface TicketContextValue {
   tickets: DashboardCard[]
   setTickets: React.Dispatch<React.SetStateAction<DashboardCard[]>>
-  addTicket: (data: { title: string; description: string; responsible?: string }) => Promise<void>
+  addTicket: (data: { title: string; description: string; userId?: string }) => Promise<void>
   updateTicket: (
     id: string,
-    data: { title: string; description: string; responsible?: string }
+    data: { title: string; description: string; userId?: string }
   ) => Promise<void>
   updateTicketStatus: (id: string, status: TicketStatus) => Promise<void>
   loading: boolean
   error: string | null
+  clearError: () => void
   loadTickets: () => Promise<void>
 }
 
@@ -24,6 +25,10 @@ export function TicketProvider({ children }: { children: ReactNode }) {
   const [tickets, setTickets] = useState<DashboardCard[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
 
   const loadTickets = useCallback(async () => {
     setLoading(true)
@@ -45,38 +50,42 @@ export function TicketProvider({ children }: { children: ReactNode }) {
   }, [loadTickets])
 
   const addTicket = useCallback(
-    async (data: { title: string; description: string; responsible?: string }) => {
+    async (data: { title: string; description: string; userId?: string }) => {
       setError(null)
       try {
-        const created = await ticketsService.createTicket({
+        await ticketsService.createTicket({
           title: data.title,
           description: data.description,
-          responsible: data.responsible,
+          userId: data.userId,
         })
-        setTickets((prev) => [...prev, created])
+        await loadTickets()
       } catch (e) {
-        const message = e instanceof Error ? e.message : "Failed to create ticket"
+        const message =
+          e instanceof Error && e.message.trim()
+            ? e.message
+            : "We couldn't create the ticket right now. Please try again."
         setError(message)
         throw e
       }
     },
-    []
+    [loadTickets]
   )
 
   const updateTicket = useCallback(
     async (
       id: string,
-      data: { title: string; description: string; responsible?: string }
+      data: { title: string; description: string; userId?: string }
     ) => {
       setError(null)
       try {
         const updated = await ticketsService.updateTicket(id, {
           title: data.title,
           description: data.description,
-          responsible: data.responsible,
+          userId: data.userId ?? "",
         })
+        
         setTickets((prev) =>
-          prev.map((t) => (t.id === id ? updated : t))
+          prev.map((t) => (t.id=== id ? updated : t))
         )
       } catch (e) {
         const message = e instanceof Error ? e.message : "Failed to update ticket"
@@ -121,6 +130,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         updateTicketStatus,
         loading,
         error,
+        clearError,
         loadTickets,
       }}
     >

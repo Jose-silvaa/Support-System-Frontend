@@ -35,7 +35,6 @@ export function LoginPage() {
     setLoading(true)
     try {
       await loginViaApi({ email, password })
-      toaster.success({ title: "Signed in" })
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error signing in"
@@ -89,7 +88,7 @@ export function LoginPage() {
                     fontSize="16px"
                     fontWeight="normal"
                     color={LABEL_OPACITY}
-                    mb="2"
+                    mb="0.5"
                   >
                     Email
                   </Field.Label>
@@ -119,7 +118,7 @@ export function LoginPage() {
                     fontSize="16px"
                     fontWeight="normal"
                     color={LABEL_OPACITY}
-                    mb="2"
+                    mb="0.5"
                   >
                     Password
                   </Field.Label>

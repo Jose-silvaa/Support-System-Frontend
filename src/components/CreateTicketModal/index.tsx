@@ -12,7 +12,6 @@ import {
 import { AppCard } from "@/components/AppCard"
 import { toaster } from "@/components/ui/toaster"
 import { useTickets } from "@/contexts/TicketContext"
-import { getCurrentUser } from "@/services/auth/auth.service"
 import {
   getAssignableUsers,
   getAssignableUserLabel,
@@ -28,11 +27,10 @@ export interface CreateTicketModalProps {
 
 export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps) {
   const { addTicket } = useTickets()
-  const currentUser = getCurrentUser()
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [responsible, setResponsible] = useState("")
+  const [userId, setUserId] = useState("")
   const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([])
 
   useEffect(() => {
@@ -44,25 +42,36 @@ export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps
   }, [open])
 
   function handleOpen() {
-    setResponsible(currentUser?.id ?? "")
     setOpen(true)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!title.trim()) return
+    if (!title.trim()) {
+      toaster.error({ title: "Error", description: "Title is required" })
+      return
+    }
+    if (!userId.trim()) {
+      toaster.error({ title: "Error", description: "Please select a reporter" })
+      return
+    }
     try {
       await addTicket({
         title: title.trim(),
         description: description,
-        responsible: responsible.trim(),
+        userId: userId,
       })
+      toaster.success({ title: "Success", description: "Ticket created successfully" })
       setTitle("")
       setDescription("")
-      setResponsible("")
+      setUserId("")
       setOpen(false)
-    } catch {
-      toaster.error({ title: "Error", description: "Failed to create ticket" })
+    } catch (e) {
+      const description =
+        e instanceof Error && e.message.trim()
+          ? e.message
+          : "We couldn't create the ticket right now. Please check the form and try again."
+      toaster.error({ title: "Unable to create ticket", description })
     }
   }
 
@@ -71,7 +80,7 @@ export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps
     if (!e.open) {
       setTitle("")
       setDescription("")
-      setResponsible("")
+      setUserId("")
     }
   }
 
@@ -108,14 +117,15 @@ export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="Ticket title"
                       autoFocus
+                      required
                     />
                   </Field.Root>
                   <Field.Root mb="4">
-                    <Field.Label>Responsible</Field.Label>
+                    <Field.Label>Reporter By</Field.Label>
                     <NativeSelect.Root>
                       <NativeSelect.Field
-                        value={responsible}
-                        onChange={(e) => setResponsible(e.target.value)}
+                        value={userId}
+                        onChange={(e) => setUserId(e.target.value)}
                       >
                         <option value="">Unassigned</option>
                         {assignableUsers.map((u) => (
