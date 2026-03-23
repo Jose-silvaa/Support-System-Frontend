@@ -47,6 +47,9 @@ const COLUMNS: {
   },
 ]
 
+/** Tempo até o banner de erro sumir sozinho (ms). */
+const ERROR_AUTO_DISMISS_MS = 6000
+
 export function DashboardFeature() {
   const {
     tickets: cards,
@@ -78,6 +81,14 @@ export function DashboardFeature() {
         .catch(() => setAssignableUsers([]))
     }
   }, [editingCard])
+
+  useEffect(() => {
+    if (!error) return
+    const id = window.setTimeout(() => {
+      clearError()
+    }, ERROR_AUTO_DISMISS_MS)
+    return () => window.clearTimeout(id)
+  }, [error, clearError])
 
   function handleDragStart(e: React.DragEvent, cardId: string) {
     e.dataTransfer.setData("application/json", JSON.stringify({ id: cardId }))
@@ -192,9 +203,6 @@ export function DashboardFeature() {
         >
           <Flex justify="space-between" align="flex-start" gap="3" flexWrap="wrap">
             <Text fontSize="sm">{error}</Text>
-            <Button size="xs" variant="outline" colorPalette="red" onClick={clearError}>
-              Dismiss
-            </Button>
           </Flex>
         </Box>
       )}

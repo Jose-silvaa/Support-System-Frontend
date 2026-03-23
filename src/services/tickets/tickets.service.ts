@@ -23,19 +23,32 @@ export interface UpdateTicketBody {
   status?: TicketStatus
 }
 
+/** API devolve o ticket em `data` ou no próprio objeto (lista / PATCH). */
+function ticketFields(raw: Record<string, unknown>): Record<string, unknown> {
+  const inner = raw.data
+  if (inner != null && typeof inner === "object" && !Array.isArray(inner)) {
+    return inner as Record<string, unknown>
+  }
+  return raw
+}
+
 /** Normalize API response to DashboardCard (handles id as number from backend). */
 function toDashboardCard(raw: Record<string, unknown>): DashboardCard {
-
-  if(raw.success === false) {
-    throw new Error(raw.message as string);
+  if (raw.success === false) {
+    const msg = raw.message
+    throw new Error(typeof msg === "string" && msg ? msg : "Request failed")
   }
-
+  const row = ticketFields(raw)
+  if (row.success === false) {
+    const msg = row.message
+    throw new Error(typeof msg === "string" && msg ? msg : "Request failed")
+  }
   return {
-    id: String(raw.id ?? ""),
-    title: String(raw.title ?? ""),
-    description: String(raw.description ?? ""),
-    status: Number(raw.status) as TicketStatus,
-    userId: String(raw.userId ?? ""),
+    id: String(row.id ?? ""),
+    title: String(row.title ?? ""),
+    description: String(row.description ?? ""),
+    status: Number(row.status) as TicketStatus,
+    userId: String(row.userId ?? ""),
   }
 }
 
