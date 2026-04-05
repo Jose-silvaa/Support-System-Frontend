@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { Box, Button, Container, Heading, HStack, Input } from "@chakra-ui/react"
+import { Box, Button, Container, Heading, HStack} from "@chakra-ui/react"
 import { TicketProvider } from "@/contexts/TicketContext"
 import { ROUTES } from "@/routes"
 import { getCurrentUser, isAuthenticated, logout } from "@/services/auth/auth.service"

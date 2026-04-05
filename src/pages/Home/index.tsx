@@ -19,9 +19,6 @@ export function HomePage() {
         <Button size="sm" variant="outline" onClick={() => navigate(ROUTES.REGISTER)}>
           Registo
         </Button>
-        <Button size="sm" variant="outline" onClick={() => navigate(ROUTES.DESIGN_SYSTEM)}>
-          Design System
-        </Button>
       </HStack>
       <AppCard title="Exemplo de card">
         Componentes usados apenas nesta página ficam em <code>pages/Home/components/</code>.

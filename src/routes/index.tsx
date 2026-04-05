@@ -11,8 +11,6 @@ import { MainLayout } from "@/layout"
 import { LoginPage } from "@/pages/Login"
 import { RegisterPage } from "@/pages/Register"
 import { DashboardPage } from "@/pages/Dashboard"
-import { DesignSystemPage } from "@/pages/DesignSystem"
-
 export { ROUTES } from "./constants"
 export type { AppRoute } from "./constants"
 
@@ -61,16 +59,6 @@ const routes: RouteObject[] = [
       <MainLayout>
         <PrivateRoute>
           <DashboardPage />
-        </PrivateRoute>
-      </MainLayout>
-    ),
-  },
-  {
-    path: ROUTES.DESIGN_SYSTEM,
-    element: (
-      <MainLayout>
-        <PrivateRoute>
-          <DesignSystemPage />
         </PrivateRoute>
       </MainLayout>
     ),
