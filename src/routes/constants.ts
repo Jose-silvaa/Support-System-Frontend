@@ -7,7 +7,6 @@ export const ROUTES = {
   LOGIN: "/login",
   REGISTER: "/register",
   DASHBOARD: "/dashboard",
-  DESIGN_SYSTEM: "/design-system",
 } as const
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES]

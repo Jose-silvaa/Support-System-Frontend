@@ -78,14 +78,16 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     ) => {
       setError(null)
       try {
+        const current = tickets.find((t) => t.id === id)
         const updated = await ticketsService.updateTicket(id, {
           title: data.title,
           description: data.description,
           userId: data.userId ?? "",
+          ...(current != null ? { status: current.status } : {}),
         })
-        
+
         setTickets((prev) =>
-          prev.map((t) => (t.id=== id ? updated : t))
+          prev.map((t) => (t.id === id ? updated : t))
         )
       } catch (e) {
         const message = e instanceof Error ? e.message : "Failed to update ticket"
@@ -93,7 +95,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         throw e
       }
     },
-    []
+    [tickets]
   )
 
   const updateTicketStatus = useCallback(async (id: string, status: TicketStatus) => {

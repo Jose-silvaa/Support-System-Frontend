@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Box, Button, Container, Heading, HStack, Input } from "@chakra-ui/react"
 import { TicketProvider } from "@/contexts/TicketContext"
@@ -7,6 +8,9 @@ import { getCurrentUser, isAuthenticated, logout } from "@/services/auth/auth.se
 
 /** Rotas em que o menu de navegação não é exibido. */
 const PUBLIC_ROUTES: string[] = [ROUTES.HOME, ROUTES.LOGIN, ROUTES.REGISTER]
+
+/** Rotas que exigem sessão JWT válida (inclui exp não ultrapassado). */
+const PROTECTED_ROUTES: string[] = [ROUTES.DASHBOARD]
 
 /** Roxo do header (igual à página de login). */
 const HEADER_PURPLE = "#925fe2"
@@ -44,6 +48,25 @@ export function MainLayout({ children }: MainLayoutProps) {
     logout()
     navigate(ROUTES.LOGIN)
   }
+
+  useEffect(() => {
+    function redirectIfSessionInvalid() {
+      if (!PROTECTED_ROUTES.includes(location.pathname)) return
+      if (!isAuthenticated()) {
+        navigate(ROUTES.LOGIN, { replace: true })
+      }
+    }
+    redirectIfSessionInvalid()
+    const intervalId = window.setInterval(redirectIfSessionInvalid, 60_000)
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") redirectIfSessionInvalid()
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange)
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
+    }
+  }, [location.pathname, navigate])
 
   if (isAuthPage) {
     return (
