@@ -4,7 +4,7 @@ import { cardStyles } from "./styles"
 
 export function AppCard({ title, children }: AppCardProps) {
   return (
-    <Box {...cardStyles.root} border={"2px #925fe2 solid"}>
+    <Box {...cardStyles.root} rounded={"lg"}>
       {title != null && (
         <Box {...cardStyles.header}>
           <Heading size="md">{title}</Heading>

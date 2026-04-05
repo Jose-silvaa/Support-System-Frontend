@@ -38,6 +38,7 @@ export interface RequestOptions {
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, headers = {} } = options
   const url = getApiUrl(path)
+  const tokenBeforeRequest = authTokenGetter()
   const res = await fetch(url, {
     method,
     headers: {
@@ -48,6 +49,12 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     ...(body != null && { body: JSON.stringify(body) }),
   })
   if (!res.ok) {
+    if (res.status === 401 && tokenBeforeRequest) {
+      void import("@/services/auth/auth.service").then(({ logout }) => {
+        logout()
+        window.location.assign("/login")
+      })
+    }
     const err = await res.json().catch(() => ({}))
     const message = (err as { message?: string }).message ?? `Error ${res.status}`
     throw new Error(message)

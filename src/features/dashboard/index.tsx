@@ -17,6 +17,7 @@ import {
 import { AppCard, CreateTicketModal } from "@/components"
 import { toaster } from "@/components/ui/toaster"
 import { useTickets } from "@/contexts/TicketContext"
+import { getCurrentUser, type AuthUser } from "@/services/auth/auth.service"
 import {
   getAssignableUsers,
   getAssignableUserLabel,
@@ -28,27 +29,53 @@ import { TicketStatus } from "./interfaces"
 const COLUMNS: {
   status: TicketStatus
   label: string
-  accent: { border: string; bg: string; heading: string }
+  accent: { border: string; bg: string; labelColor: string; labelBg: string }
 }[] = [
   {
     status: TicketStatus.Open,
     label: "Open",
-    accent: { border: "gray.400", bg: "gray.50", heading: "gray.700" },
+    accent: {
+      border: "gray.400",
+      bg: "gray.50",
+      labelColor: "green.900",
+      labelBg: "green.100",
+    },
   },
   {
     status: TicketStatus.InProgress,
     label: "In Progress",
-    accent: { border: "gray.400", bg: "gray.50", heading: "gray.700" },
+    accent: {
+      border: "gray.400",
+      bg: "gray.50",
+      labelColor: "blue.900",
+      labelBg: "blue.50",
+    },
   },
   {
     status: TicketStatus.Closed,
     label: "Closed",
-    accent: { border: "gray.400", bg: "gray.50", heading: "gray.700" },
+    accent: {
+      border: "gray.400",
+      bg: "gray.50",
+      labelColor: "red.900",
+      labelBg: "red.100",
+    },
   },
 ]
 
 /** Tempo até o banner de erro sumir sozinho (ms). */
 const ERROR_AUTO_DISMISS_MS = 6000
+
+function isRestrictedUserRole(role: string | undefined): boolean {
+  return role?.trim().toLowerCase() === "user"
+}
+
+/** Utilizadores com role `user` só alteram tickets em que são o reporter (`userId`). */
+function canUserModifyTicket(user: AuthUser | null, card: DashboardCard): boolean {
+  if (!user) return false
+  if (!isRestrictedUserRole(user.role)) return true
+  return user.id.trim() === card.userId.trim()
+}
 
 export function DashboardFeature() {
   const {
@@ -59,6 +86,7 @@ export function DashboardFeature() {
     error,
     clearError,
   } = useTickets()
+  const currentUser = getCurrentUser()
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetStatus, setDropTargetStatus] = useState<TicketStatus | null>(null)
   const [editingCard, setEditingCard] = useState<DashboardCard | null>(null)
@@ -124,6 +152,7 @@ export function DashboardFeature() {
   async function handleEditSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!editingCard) return
+    if (!canUserModifyTicket(currentUser, editingCard)) return
     if (!editTitle.trim()) {
       toaster.error({ title: "Error", description: "Title is required" })
       return
@@ -160,6 +189,8 @@ export function DashboardFeature() {
     setDropTargetStatus(null)
     try {
       const data = JSON.parse(e.dataTransfer.getData("application/json")) as { id: string }
+      const card = cards.find((c) => c.id === data.id)
+      if (card && !canUserModifyTicket(currentUser, card)) return
       updateTicketStatus(data.id, newStatus)
     } finally {
       setDraggedId(null)
@@ -176,6 +207,9 @@ export function DashboardFeature() {
     const description = card.description?.trim()
     return description ? description : "No description provided"
   }
+
+  const canEditModal =
+    editingCard != null && canUserModifyTicket(currentUser, editingCard)
 
   return (
     <VStack align="stretch" gap="6">
@@ -232,52 +266,59 @@ export function DashboardFeature() {
             maxH="70vh"
             borderRadius="lg"
             borderWidth="2px"
-            borderColor={dropTargetStatus === status ? "purple.400" : accent.border}
             display="flex"
             flexDir="column"
             overflow="hidden"
+            borderColor={dropTargetStatus === status ? "purple.400" : accent.border}
             transition="border-color 0.15s, background 0.15s"
             onDragOver={(e) => handleDragOver(e, status)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, status)}
+            bgColor={accent.bg}
           >
-            <Heading size="sm" mb="2" pl={6} pr={4} pt={4} pb={4}  bgColor={accent.bg} color={accent.heading} fontWeight="bold" flexShrink={0}>
-              {label}
+            <Heading size="sm" pl={6} pr={4} pt={4} pb={4} fontWeight="bold" flexShrink={0}>
+              <Text
+                as="span"
+                display="inline-block"
+                color={accent.labelColor}
+                bg={accent.labelBg}
+                pl={3}
+                pr={3}
+                pt={1.5}
+                pb={1.5}
+                width="max-content"
+                fontSize="inherit"
+              >
+                {label}
+              </Text>
             </Heading>
-            <VStack
-              align="stretch"
-              gap="3"
-              overflowY="auto"
-              overflowX="hidden"
-              flex="1"
-              minH="0"
-            >
+            <VStack align="stretch" gap="3" overflowY="auto" overflowX="hidden" flex="1" minH="0">
               {cards
                 .filter((card) => card.status === status)
-                .map((card) => (
+                .map((card) => {
+                  const canModifyCard = canUserModifyTicket(currentUser, card)
+                  return (
                   <Box
                     key={card.id}
-                    draggable
+                    draggable={canModifyCard}
                     onDragStart={(e) => handleDragStart(e, card.id)}
                     onDragEnd={handleDragEnd}
                     onClick={() => handleCardClick(card)}
-                    cursor="grab"
-                    _active={{ cursor: "grabbing" }}
+                    cursor={canModifyCard ? "grab" : "default"}
+                    _active={canModifyCard ? { cursor: "grabbing" } : undefined}
                     _hover={{ opacity: 0.95 }}
                     opacity={draggedId === card.id ? 0.5 : 1}
                     transition="opacity 0.15s"
                     pr={4}
                     pl={4}
-                    pt={3}
-                    pb={4}
                   >
                     <AppCard title={card.title}>
-                      <VStack align="start" gap="10">
+                      <VStack align="start" gap="4">
                         <VStack align="start" gap="0">
                           <Text fontSize="sm" color="gray.700" fontWeight="bold">
                             Description
                           </Text>
-                          <Text fontSize="sm" color="gray.700">
+                          <Text fontSize="sm" color="gray.700" textAlign="justify">
                             {getCardDescription(card)}
                           </Text>
                         </VStack>
@@ -292,7 +333,8 @@ export function DashboardFeature() {
                       </VStack>
                     </AppCard>
                   </Box>
-                ))}
+                  )
+                })}
             </VStack>
           </Box>
         ))}
@@ -307,24 +349,31 @@ export function DashboardFeature() {
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Box borderRadius="lg" overflow="hidden" bg="bg" color="fg">
+            <Box  overflow="hidden" bg="bg">
               <AppCard title="Edit ticket">
                 <form onSubmit={handleEditSubmit}>
+                  {!canEditModal && (
+                    <Text fontSize="sm" color="gray.600" mb="4">
+                      You can only edit your own tickets.
+                    </Text>
+                  )}
                   <Field.Root mb="4">
                     <Field.Label>Title</Field.Label>
                     <Input
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="Ticket title"
-                      required
+                      required={canEditModal}
+                      disabled={!canEditModal}
                     />
                   </Field.Root>
                   <Field.Root mb="4">
                     <Field.Label>Reporter by</Field.Label>
-                    <NativeSelect.Root>
+                    <NativeSelect.Root disabled={!canEditModal}>
                       <NativeSelect.Field
                         value={editUserId}
                         onChange={(e) => setEditUserId(e.target.value)}
+                        {...{ disabled: !canEditModal }}
                       >
                         <option value="">Unassigned</option>
                         {assignableUsers.map((u) => (
@@ -343,13 +392,14 @@ export function DashboardFeature() {
                       onChange={(e) => setEditDescription(e.target.value)}
                       placeholder="Description..."
                       rows={4}
+                      disabled={!canEditModal}
                     />
                   </Field.Root>
                   <HStack gap="2" justify="flex-end">
                     <Button type="button" variant="outline" size="sm" onClick={handleEditClose}>
                       Cancel
                     </Button>
-                    <Button type="submit" size="sm" colorPalette="purple">
+                    <Button type="submit" size="sm" colorPalette="purple" disabled={!canEditModal}>
                       Save
                     </Button>
                   </HStack>
