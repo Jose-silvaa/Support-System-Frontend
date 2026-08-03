@@ -9,8 +9,7 @@ Estrutura baseada no artigo [Arquitetura para aplicações React](https://vinnic
 | **assets** | Imagens, fontes, mocks e outros ficheiros estáticos |
 | **components** | Componentes reutilizáveis em toda a app (ex.: `AppCard`, `ui/provider`) |
 | **configs** | Configurações globais (env, app name, etc.) |
-| **context** | Contextos React para estado global |
-| **features** | Funcionalidades isoladas com componentes, hooks e serviços próprios |
+| **contexts** | Contextos React para estado global (ex.: `TicketContext`) |
 | **hooks** | Hooks customizados globais |
 | **layout** | Layouts (navbar + conteúdo, etc.) |
 | **lib** | Integrações com libs externas (ex.: Axios, API client) |
@@ -43,16 +42,4 @@ Home/
   components/        → componentes usados só nesta página (mesma estrutura de components/)
 ```
 
-## Estrutura de uma feature (ex.: `features/dashboard/`)
-
-```
-dashboard/
-  index.tsx
-  interfaces.ts
-  components/
-  hooks/
-  services/
-  styles/
-```
-
-Usar **features** em projetos grandes ou quando uma funcionalidade tem muitos componentes/hooks/serviços próprios.
+Tipos/interfaces usados por múltiplas camadas (ex.: `DashboardCard`, consumido por `services/tickets`, `contexts/TicketContext` e `pages/Dashboard`) devem morar junto do `service` a que pertencem (ex.: `services/tickets/interfaces.ts`), não dentro de uma página específica.

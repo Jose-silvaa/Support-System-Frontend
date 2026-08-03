@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
-import type { DashboardCard } from "@/features/dashboard/interfaces"
-import { TicketStatus } from "@/features/dashboard/interfaces"
+import type { DashboardCard } from "@/services/tickets/interfaces"
+import { TicketStatus } from "@/services/tickets/interfaces"
 import * as ticketsService from "@/services/tickets/tickets.service"
 
 interface TicketContextValue {
