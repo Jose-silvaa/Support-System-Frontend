@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Box,
   Button,
@@ -6,17 +6,12 @@ import {
   Field,
   HStack,
   Input,
-  NativeSelect,
   Textarea,
 } from "@chakra-ui/react"
 import { AppCard } from "@/components/AppCard"
 import { toaster } from "@/components/ui/toaster"
 import { useTickets } from "@/contexts/TicketContext"
-import {
-  getAssignableUsers,
-  getAssignableUserLabel,
-  type AssignableUser,
-} from "@/services/users/users.service"
+import { getCurrentUser } from "@/services/auth/auth.service"
 
 const HEADER_PURPLE = "#925fe2"
 
@@ -30,16 +25,6 @@ export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [userId, setUserId] = useState("")
-  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([])
-
-  useEffect(() => {
-    if (open) {
-      getAssignableUsers()
-        .then(setAssignableUsers)
-        .catch(() => setAssignableUsers([]))
-    }
-  }, [open])
 
   function handleOpen() {
     setOpen(true)
@@ -51,20 +36,20 @@ export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps
       toaster.error({ title: "Error", description: "Title is required" })
       return
     }
-    if (!userId.trim()) {
-      toaster.error({ title: "Error", description: "Please select a reporter" })
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      toaster.error({ title: "Error", description: "You must be signed in to create a ticket" })
       return
     }
     try {
       await addTicket({
         title: title.trim(),
         description: description,
-        userId: userId,
+        userId: currentUser.id,
       })
       toaster.success({ title: "Success", description: "Ticket created successfully" })
       setTitle("")
       setDescription("")
-      setUserId("")
       setOpen(false)
     } catch (e) {
       const description =
@@ -80,7 +65,6 @@ export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps
     if (!e.open) {
       setTitle("")
       setDescription("")
-      setUserId("")
     }
   }
 
@@ -119,23 +103,6 @@ export function CreateTicketModal({ variant = "header" }: CreateTicketModalProps
                       autoFocus
                       required
                     />
-                  </Field.Root>
-                  <Field.Root mb="4">
-                    <Field.Label>Reporter By</Field.Label>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field
-                        value={userId}
-                        onChange={(e) => setUserId(e.target.value)}
-                      >
-                        <option value="">Unassigned</option>
-                        {assignableUsers.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {getAssignableUserLabel(u)}
-                          </option>
-                        ))}
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
                   </Field.Root>
                   <Field.Root mb="4">
                     <Field.Label>Description</Field.Label>

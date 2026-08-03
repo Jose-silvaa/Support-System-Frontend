@@ -3,11 +3,11 @@ import { useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Box, Button, Container, Heading, HStack} from "@chakra-ui/react"
 import { TicketProvider } from "@/contexts/TicketContext"
-import { ROUTES } from "@/routes"
+import { ROUTES } from "@/routes/constants"
 import { getCurrentUser, isAuthenticated, logout } from "@/services/auth/auth.service"
 
-/** Rotas em que o menu de navegação não é exibido. */
-const PUBLIC_ROUTES: string[] = [ROUTES.HOME, ROUTES.LOGIN, ROUTES.REGISTER]
+/** Rotas com layout próprio (sem header/Container/TicketProvider do app). */
+const FULL_BLEED_ROUTES: string[] = [ROUTES.HOME, ROUTES.LOGIN, ROUTES.REGISTER]
 
 /** Rotas que exigem sessão JWT válida (inclui exp não ultrapassado). */
 const PROTECTED_ROUTES: string[] = [ROUTES.DASHBOARD]
@@ -35,14 +35,12 @@ interface MainLayoutProps {
 
 /**
  * Layout principal: navbar com links + conteúdo.
- * O menu não é exibido em rotas públicas (home, login, registo).
+ * Rotas em FULL_BLEED_ROUTES (home, login, registo) usam o próprio layout em vez deste.
  */
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname)
-  const isAuthPage =
-    location.pathname === ROUTES.LOGIN || location.pathname === ROUTES.REGISTER
+  const isFullBleedRoute = FULL_BLEED_ROUTES.includes(location.pathname)
 
   function handleLogout() {
     logout()
@@ -68,7 +66,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     }
   }, [location.pathname, navigate])
 
-  if (isAuthPage) {
+  if (isFullBleedRoute) {
     return (
       <Box minH="100vh" bg="transparent" color="fg">
         <Box as="main" minH="100vh" py="0" px="0">
@@ -81,61 +79,59 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <TicketProvider>
       <Box minH="100vh" bg="bg" color="fg">
-        {!isPublicRoute && (
-          <Box
-            as="header"
-            bg={HEADER_PURPLE}
-            color="white"
-            borderBottomWidth="1px"
-            borderColor="whiteAlpha.200"
-            py="3"
-            px="4"
-          >
-            <Container maxW="container.xl">
-              <HStack gap="4" justify="space-between" flexWrap="wrap">
-                <Heading size="md" fontWeight="semibold" color="white">
-                  Ticket Desk
-                </Heading>
-                <HStack gap="3" as="nav" color="white">
-                  {isAuthenticated() && (
-                    <>
-                      {(() => {
-                        const user = getCurrentUser()
-                        return user ? (
-                          <Box
-                            title={user.name || user.email}
-                            w="8"
-                            h="8"
-                            borderRadius="full"
-                            bg="whiteAlpha.300"
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                            fontSize="xs"
-                            fontWeight="semibold"
-                            flexShrink={0}
-                          >
-                            {getInitials(user.name, user.email)}
-                          </Box>
-                        ) : null
-                      })()}
-                      <Button
-                        variant="outline"
-                        color="white"
-                        bg="red.500"
-                        size="sm"
-                        _hover={{ bg: "red.600" }}
-                        onClick={handleLogout}
-                      >
-                        Logout
-                      </Button>
-                    </>
-                  )}
-                </HStack>
+        <Box
+          as="header"
+          bg={HEADER_PURPLE}
+          color="white"
+          borderBottomWidth="1px"
+          borderColor="whiteAlpha.200"
+          py="3"
+          px="4"
+        >
+          <Container maxW="container.xl">
+            <HStack gap="4" justify="space-between" flexWrap="wrap">
+              <Heading size="md" fontWeight="semibold" color="white">
+                Ticket Desk
+              </Heading>
+              <HStack gap="3" as="nav" color="white">
+                {isAuthenticated() && (
+                  <>
+                    {(() => {
+                      const user = getCurrentUser()
+                      return user ? (
+                        <Box
+                          title={user.name || user.email}
+                          w="8"
+                          h="8"
+                          borderRadius="full"
+                          bg="whiteAlpha.300"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          fontSize="xs"
+                          fontWeight="semibold"
+                          flexShrink={0}
+                        >
+                          {getInitials(user.name, user.email)}
+                        </Box>
+                      ) : null
+                    })()}
+                    <Button
+                      variant="outline"
+                      color="white"
+                      bg="red.500"
+                      size="sm"
+                      _hover={{ bg: "red.600" }}
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                )}
               </HStack>
-            </Container>
-          </Box>
-        )}
+            </HStack>
+          </Container>
+        </Box>
         <Box as="main" py="8" px="4">
           <Container maxW="container.xl">{children}</Container>
         </Box>

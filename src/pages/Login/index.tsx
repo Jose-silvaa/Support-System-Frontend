@@ -10,17 +10,10 @@ import {
   VStack,
   Field,
 } from "@chakra-ui/react"
-import { ROUTES } from "@/routes"
+import { ROUTES } from "@/routes/constants"
 import { loginViaApi } from "@/services/auth/auth.service"
 import { Toaster, toaster } from "@/components/ui/toaster"
-
-const FORM_MAX_W = "393px"
-const PANEL_DARK = "#1c1d21"
-const PANEL_PURPLE = "#925fe2"
-const BUTTON_PRIMARY = "#9c6fe4"
-const BUTTON_SECONDARY = "#333437"
-const LABEL_OPACITY = "rgba(255,255,255,0.5)"
-const SUBTITLE_OPACITY = "rgba(255,255,255,0.7)"
+import { AUTH_FORM_MAX_W, brand as authColors } from "@/theme/brand"
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -49,7 +42,7 @@ export function LoginPage() {
     <Box
       minH="100vh"
       w="100%"
-      bg={PANEL_PURPLE}
+      bg={authColors.panelDark}
       color="white"
       display="flex"
     >
@@ -59,24 +52,27 @@ export function LoginPage() {
       <Box
         w={{ base: "100%", lg: "630px" }}
         flexShrink={0}
-        bg={PANEL_DARK}
+        bg={authColors.panelDark}
         display="flex"
         flexDir="column"
         justifyContent="center"
+        px={{ base: "6", md: "8" }}
         py="8"
       >
-        <VStack gap="12" align="stretch" maxW={FORM_MAX_W} mx="auto" w="100%">
+        <VStack gap="12" align="stretch" maxW={AUTH_FORM_MAX_W} mx="auto" w="100%">
           <VStack gap="6" align="stretch">
             <VStack gap="3" align="stretch">
               <Heading
                 as="h1"
+                fontFamily="display"
                 fontSize="48px"
-                fontWeight="bold"
-                lineHeight="normal"
+                fontWeight="600"
+                letterSpacing="-0.01em"
+                lineHeight="1.05"
               >
                 Login
               </Heading>
-              <Text fontSize="16px" fontWeight="medium" color={SUBTITLE_OPACITY}>
+              <Text fontSize="16px" fontWeight="medium" color={authColors.subtitle}>
                 Enter your account details
               </Text>
             </VStack>
@@ -87,7 +83,7 @@ export function LoginPage() {
                   <Field.Label
                     fontSize="16px"
                     fontWeight="normal"
-                    color={LABEL_OPACITY}
+                    color={authColors.label}
                     mb="0.5"
                   >
                     Email
@@ -100,7 +96,7 @@ export function LoginPage() {
                     bg="transparent"
                     border="none"
                     borderBottom="1px solid"
-                    borderColor="whiteAlpha.400"
+                    borderColor={authColors.inputBorder}
                     borderRadius="0"
                     color="white"
                     outline="none"
@@ -108,8 +104,9 @@ export function LoginPage() {
                     py="2"
                     h="auto"
                     fontSize="16px"
-                    _placeholder={{ color: "whiteAlpha.500" }}
-                    _focus={{ borderColor: "whiteAlpha.600", boxShadow: "none" }}
+                    transition="border-color 0.15s"
+                    _placeholder={{ color: authColors.inputPlaceholder }}
+                    _focus={{ borderColor: authColors.inputFocusBorder, boxShadow: "none" }}
                   />
                 </Field.Root>
 
@@ -117,7 +114,7 @@ export function LoginPage() {
                   <Field.Label
                     fontSize="16px"
                     fontWeight="normal"
-                    color={LABEL_OPACITY}
+                    color={authColors.label}
                     mb="0.5"
                   >
                     Password
@@ -130,7 +127,7 @@ export function LoginPage() {
                     bg="transparent"
                     border="none"
                     borderBottom="1px solid"
-                    borderColor="whiteAlpha.400"
+                    borderColor={authColors.inputBorder}
                     borderRadius="0"
                     color="white"
                     outline="none"
@@ -138,15 +135,26 @@ export function LoginPage() {
                     py="2"
                     h="auto"
                     fontSize="16px"
-                    _placeholder={{ color: "whiteAlpha.500" }}
-                    _focus={{ borderColor: "whiteAlpha.600", boxShadow: "none" }}
+                    transition="border-color 0.15s"
+                    _placeholder={{ color: authColors.inputPlaceholder }}
+                    _focus={{ borderColor: authColors.inputFocusBorder, boxShadow: "none" }}
                   />
                 </Field.Root>
 
                 {error && (
-                  <Text color="red.300" fontSize="sm">
-                    {error}
-                  </Text>
+                  <Box
+                    role="alert"
+                    bg={authColors.errorBg}
+                    borderWidth="1px"
+                    borderColor={authColors.errorBorder}
+                    borderRadius="md"
+                    px="3"
+                    py="2"
+                  >
+                    <Text fontSize="sm" color={authColors.errorText}>
+                      {error}
+                    </Text>
+                  </Box>
                 )}
 
                 <Button
@@ -154,11 +162,14 @@ export function LoginPage() {
                   loading={loading}
                   w="100%"
                   py="3"
-                  bg={BUTTON_PRIMARY}
+                  bg={authColors.accent}
                   color="white"
                   fontSize="16px"
                   fontWeight="normal"
-                  _hover={{ bg: "#8b5fd6" }}
+                  transition="background-color 0.15s"
+                  boxShadow="0 12px 24px -12px rgba(156,111,228,0.65)"
+                  _hover={{ bg: authColors.accentHover }}
+                  _active={{ bg: authColors.accentActive }}
                 >
                   Login
                 </Button>
@@ -167,20 +178,21 @@ export function LoginPage() {
           </VStack>
 
           <Flex gap="4" align="center" flexWrap="wrap">
-            <Text fontSize="16px" color={LABEL_OPACITY}>
+            <Text fontSize="16px" color={authColors.label}>
               Don't have an account?
             </Text>
             <Button
               variant="outline"
-              bg={BUTTON_SECONDARY}
+              bg={authColors.buttonSecondary}
               color="white"
-              borderColor="transparent"
+              borderColor="whiteAlpha.100"
               px="6"
               py="3"
               borderRadius="8px"
               fontSize="16px"
               fontWeight="normal"
-              _hover={{ bg: "#424347" }}
+              transition="background-color 0.15s"
+              _hover={{ bg: authColors.buttonSecondaryHover }}
               onClick={() => navigate(ROUTES.REGISTER)}
             >
               Sign up
@@ -196,21 +208,32 @@ export function LoginPage() {
         flexDir="column"
         justifyContent="center"
         alignItems="center"
+        bg={authColors.welcomeGradient}
+        px="12"
       >
-        <VStack gap="3" align="center" mx="auto">
+        <VStack gap="4" align="center" mx="auto" maxW="480px">
           <Heading
             as="h2"
-            fontSize={{ lg: "50px", xl: "50px" }}
-            fontWeight="bold"
-            lineHeight="1.1"
+            fontFamily="display"
+            fontSize={{ lg: "50px", xl: "56px" }}
+            fontWeight="600"
+            letterSpacing="-0.01em"
+            lineHeight="1.08"
+            textAlign="center"
           >
-            Welcome to the{" "}
-            <Text as="span" fontWeight="normal">
-              Supporter Portal
+            Welcome back to{" "}
+            <Text as="span" fontStyle="italic" fontWeight="500" whiteSpace="nowrap">
+              Ticket Desk
             </Text>
           </Heading>
-          <Text fontSize="16px" fontWeight="medium" color="#eee">
-          Create and track support tickets, report issues, and request assistance from the support team.
+          <Text
+            fontSize="16px"
+            fontWeight="medium"
+            color={authColors.welcomeText}
+            textAlign="center"
+            lineHeight="1.6"
+          >
+            A community-driven platform for reporting and tracking issues across popular services
           </Text>
         </VStack>
       </Box>
