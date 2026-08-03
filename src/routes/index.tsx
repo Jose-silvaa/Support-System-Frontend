@@ -8,6 +8,7 @@ import {
 import { ROUTES } from "./constants"
 import { isAuthenticated } from "@/services/auth/auth.service"
 import { MainLayout } from "@/layout"
+import { HomePage } from "@/pages/Home"
 import { LoginPage } from "@/pages/Login"
 import { RegisterPage } from "@/pages/Register"
 import { DashboardPage } from "@/pages/Dashboard"
@@ -31,7 +32,13 @@ function PrivateRoute({ children }: { children: ReactNode }) {
 const routes: RouteObject[] = [
   {
     path: ROUTES.HOME,
-    element: <Navigate to={ROUTES.LOGIN} replace />,
+    element: (
+      <MainLayout>
+        <PublicRoute>
+          <HomePage />
+        </PublicRoute>
+      </MainLayout>
+    ),
   },
   {
     path: ROUTES.LOGIN,
@@ -65,7 +72,7 @@ const routes: RouteObject[] = [
   },
   {
     path: "*",
-    element: <Navigate to={ROUTES.LOGIN} replace />,
+    element: <Navigate to={ROUTES.HOME} replace />,
   },
 ]
 

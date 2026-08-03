@@ -38,6 +38,8 @@ export const tokens = defineTokens({
     heading: { value: "Nunito, sans-serif" },
     body: { value: "Nunito, sans-serif" },
     mono: { value: "ui-monospace, monospace" },
+    /** Serif de destaque para títulos editoriais (ex.: telas de login/registo). */
+    display: { value: "'Fraunces', serif" },
   },
   animations: {
     "fade-in": { value: "fade-in 0.3s ease-out" },

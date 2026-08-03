@@ -1,5 +1,13 @@
 /**
- * Componentes usados apenas pela página Home.
- * Seguem a mesma estrutura de components/ (index.tsx, interfaces.ts, styles.ts, etc.)
+ * Componentes usados apenas pela página Home (landing page).
  */
-export {}
+export { Navbar } from "./Navbar"
+export { Hero } from "./Hero"
+export { Features } from "./Features"
+export { HowItWorks } from "./HowItWorks"
+export { TrendingIssues } from "./TrendingIssues"
+export { CallToAction } from "./CallToAction"
+export { Footer } from "./Footer"
+export { IssueCard } from "./IssueCard"
+export { StatusBadge } from "./StatusBadge"
+export { PlatformMark } from "./PlatformMark"

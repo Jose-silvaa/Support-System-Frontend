@@ -7,7 +7,6 @@ import {
   Flex,
   Heading,
   Input,
-  NativeSelect,
   Spinner,
   Text,
   Textarea,
@@ -18,11 +17,6 @@ import { AppCard, CreateTicketModal } from "@/components"
 import { toaster } from "@/components/ui/toaster"
 import { useTickets } from "@/contexts/TicketContext"
 import { getCurrentUser, type AuthUser } from "@/services/auth/auth.service"
-import {
-  getAssignableUsers,
-  getAssignableUserLabel,
-  type AssignableUser,
-} from "@/services/users/users.service"
 import type { DashboardCard } from "@/services/tickets/interfaces"
 import { TicketStatus } from "@/services/tickets/interfaces"
 
@@ -92,23 +86,7 @@ export function DashboardPage() {
   const [editingCard, setEditingCard] = useState<DashboardCard | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editDescription, setEditDescription] = useState("")
-  const [editUserId, setEditUserId] = useState("")
-  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([])
   const dragJustEndedRef = useRef(false)
-
-  useEffect(() => {
-    getAssignableUsers()
-      .then(setAssignableUsers)
-      .catch(() => setAssignableUsers([]))
-  }, [])
-
-  useEffect(() => {
-    if (editingCard) {
-      getAssignableUsers()
-        .then(setAssignableUsers)
-        .catch(() => setAssignableUsers([]))
-    }
-  }, [editingCard])
 
   useEffect(() => {
     if (!error) return
@@ -139,14 +117,12 @@ export function DashboardPage() {
     setEditingCard(card)
     setEditTitle(card.title)
     setEditDescription(card.description)
-    setEditUserId(card.userId ?? "")
   }
 
   function handleEditClose() {
     setEditingCard(null)
     setEditTitle("")
     setEditDescription("")
-    setEditUserId("")
   }
 
   async function handleEditSubmit(e: React.FormEvent) {
@@ -157,15 +133,11 @@ export function DashboardPage() {
       toaster.error({ title: "Error", description: "Title is required" })
       return
     }
-    if (!editUserId.trim()) {
-      toaster.error({ title: "Error", description: "Please select a reporter" })
-      return
-    }
     try {
       await updateTicket(editingCard.id, {
         title: editTitle.trim(),
         description: editDescription.trim(),
-        userId: editUserId,
+        userId: editingCard.userId,
       })
       toaster.success({ title: "Success", description: "Ticket updated successfully" })
       handleEditClose()
@@ -195,12 +167,6 @@ export function DashboardPage() {
     } finally {
       setDraggedId(null)
     }
-  }
-
-  function getCardResponsibleEmail(card: DashboardCard) {
-    if (!card.userId) return "Unassigned"
-    const user = assignableUsers.find((u) => u.id === card.userId || u.userId === card.userId)
-    return user ? getAssignableUserLabel(user) : "Unassigned"
   }
 
   function getCardDescription(card: DashboardCard) {
@@ -322,14 +288,6 @@ export function DashboardPage() {
                             {getCardDescription(card)}
                           </Text>
                         </VStack>
-                        <VStack align="start" gap="0">
-                          <Text fontSize="sm" color="gray.600" fontWeight="bold">
-                           Reporter by
-                          </Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {getCardResponsibleEmail(card)}
-                          </Text>
-                        </VStack>
                       </VStack>
                     </AppCard>
                   </Box>
@@ -366,24 +324,6 @@ export function DashboardPage() {
                       required={canEditModal}
                       disabled={!canEditModal}
                     />
-                  </Field.Root>
-                  <Field.Root mb="4">
-                    <Field.Label>Reporter by</Field.Label>
-                    <NativeSelect.Root disabled={!canEditModal}>
-                      <NativeSelect.Field
-                        value={editUserId}
-                        onChange={(e) => setEditUserId(e.target.value)}
-                        {...{ disabled: !canEditModal }}
-                      >
-                        <option value="">Unassigned</option>
-                        {assignableUsers.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {getAssignableUserLabel(u)}
-                          </option>
-                        ))}
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
                   </Field.Root>
                   <Field.Root mb="4">
                     <Field.Label>Description</Field.Label>
