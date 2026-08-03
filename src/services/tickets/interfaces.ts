@@ -14,7 +14,3 @@ export interface DashboardCard {
   /** Person responsible / who created the ticket */
   userId: string
 }
-
-export interface DashboardFeatureProps {
-  /** Props da feature Dashboard */
-}
