@@ -7,6 +7,7 @@ import {
   Flex,
   Heading,
   Input,
+  NativeSelect,
   Spinner,
   Text,
   Textarea,
@@ -17,6 +18,11 @@ import { AppCard, CreateTicketModal } from "@/components"
 import { toaster } from "@/components/ui/toaster"
 import { useTickets } from "@/contexts/TicketContext"
 import { getCurrentUser, type AuthUser } from "@/services/auth/auth.service"
+import {
+  getAssignableUsers,
+  getAssignableUserLabel,
+  type AssignableUser,
+} from "@/services/users/users.service"
 import type { DashboardCard } from "@/services/tickets/interfaces"
 import { TicketStatus } from "@/services/tickets/interfaces"
 
@@ -86,7 +92,23 @@ export function DashboardPage() {
   const [editingCard, setEditingCard] = useState<DashboardCard | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editDescription, setEditDescription] = useState("")
+  const [editUserId, setEditUserId] = useState("")
+  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([])
   const dragJustEndedRef = useRef(false)
+
+  useEffect(() => {
+    getAssignableUsers()
+      .then(setAssignableUsers)
+      .catch(() => setAssignableUsers([]))
+  }, [])
+
+  useEffect(() => {
+    if (editingCard) {
+      getAssignableUsers()
+        .then(setAssignableUsers)
+        .catch(() => setAssignableUsers([]))
+    }
+  }, [editingCard])
 
   useEffect(() => {
     if (!error) return
@@ -117,12 +139,14 @@ export function DashboardPage() {
     setEditingCard(card)
     setEditTitle(card.title)
     setEditDescription(card.description)
+    setEditUserId(card.userId ?? "")
   }
 
   function handleEditClose() {
     setEditingCard(null)
     setEditTitle("")
     setEditDescription("")
+    setEditUserId("")
   }
 
   async function handleEditSubmit(e: React.FormEvent) {
@@ -133,11 +157,15 @@ export function DashboardPage() {
       toaster.error({ title: "Error", description: "Title is required" })
       return
     }
+    if (!editUserId.trim()) {
+      toaster.error({ title: "Error", description: "Please select a reporter" })
+      return
+    }
     try {
       await updateTicket(editingCard.id, {
         title: editTitle.trim(),
         description: editDescription.trim(),
-        userId: editingCard.userId,
+        userId: editUserId,
       })
       toaster.success({ title: "Success", description: "Ticket updated successfully" })
       handleEditClose()
@@ -167,6 +195,12 @@ export function DashboardPage() {
     } finally {
       setDraggedId(null)
     }
+  }
+
+  function getCardResponsibleEmail(card: DashboardCard) {
+    if (!card.userId) return "Unassigned"
+    const user = assignableUsers.find((u) => u.id === card.userId || u.userId === card.userId)
+    return user ? getAssignableUserLabel(user) : "Unassigned"
   }
 
   function getCardDescription(card: DashboardCard) {
@@ -272,24 +306,65 @@ export function DashboardPage() {
                     onClick={() => handleCardClick(card)}
                     cursor={canModifyCard ? "grab" : "default"}
                     _active={canModifyCard ? { cursor: "grabbing" } : undefined}
-                    _hover={{ opacity: 0.95 }}
                     opacity={draggedId === card.id ? 0.5 : 1}
-                    transition="opacity 0.15s"
+                    transition="opacity 0.15s, transform 0.15s"
                     pr={4}
                     pl={4}
                   >
-                    <AppCard title={card.title}>
-                      <VStack align="start" gap="4">
-                        <VStack align="start" gap="0">
-                          <Text fontSize="sm" color="gray.700" fontWeight="bold">
-                            Description
+                    <Box
+                      bg="white"
+                      borderRadius="lg"
+                      p={4}
+                      boxShadow="0 2px 4px rgba(0,0,0,0.08)"
+                      borderWidth="1px"
+                      borderColor="gray.200"
+                      _hover={{ boxShadow: "0 8px 16px rgba(0,0,0,0.12)", transform: "translateY(-2px)" }}
+                      transition="box-shadow 0.2s, transform 0.2s"
+                    >
+                      <VStack align="stretch" gap="4">
+                        {/* Title */}
+                        <Heading size="sm" color="gray.900" lineHeight="1.4">
+                          {card.title}
+                        </Heading>
+
+                        {/* Description */}
+                        <VStack align="start" gap="1.5">
+                          <Text fontSize="xs" color="gray.500" fontWeight="bold" textTransform="uppercase" letterSpacing="0.5px">
+                            Details
                           </Text>
-                          <Text fontSize="sm" color="gray.700" textAlign="justify">
+                          <Text fontSize="sm" color="gray.700" lineHeight="1.6">
                             {getCardDescription(card)}
                           </Text>
                         </VStack>
+
+                        {/* Reporter */}
+                        <HStack gap="2" align="center" pt="1">
+                          <Box
+                            w="7"
+                            h="7"
+                            borderRadius="full"
+                            bg="purple.100"
+                            color="purple.700"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            fontSize="sm"
+                            fontWeight="bold"
+                            flexShrink={0}
+                          >
+                            {getCardResponsibleEmail(card).charAt(0).toUpperCase()}
+                          </Box>
+                          <VStack gap="0" align="start" flex="1" minW="0">
+                            <Text fontSize="xs" color="gray.500" fontWeight="bold" textTransform="uppercase" letterSpacing="0.5px">
+                              Reporter
+                            </Text>
+                            <Text fontSize="sm" color="gray.700" fontWeight="500" truncate title={getCardResponsibleEmail(card)}>
+                              {getCardResponsibleEmail(card)}
+                            </Text>
+                          </VStack>
+                        </HStack>
                       </VStack>
-                    </AppCard>
+                    </Box>
                   </Box>
                   )
                 })}
@@ -324,6 +399,24 @@ export function DashboardPage() {
                       required={canEditModal}
                       disabled={!canEditModal}
                     />
+                  </Field.Root>
+                  <Field.Root mb="4">
+                    <Field.Label>Reporter by</Field.Label>
+                    <NativeSelect.Root disabled={!canEditModal}>
+                      <NativeSelect.Field
+                        value={editUserId}
+                        onChange={(e) => setEditUserId(e.target.value)}
+                        {...{ disabled: !canEditModal }}
+                      >
+                        <option value="">Unassigned</option>
+                        {assignableUsers.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {getAssignableUserLabel(u)}
+                          </option>
+                        ))}
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
                   </Field.Root>
                   <Field.Root mb="4">
                     <Field.Label>Description</Field.Label>

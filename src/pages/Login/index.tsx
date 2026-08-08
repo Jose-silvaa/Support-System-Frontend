@@ -233,7 +233,7 @@ export function LoginPage() {
             textAlign="center"
             lineHeight="1.6"
           >
-            A community-driven platform for reporting and tracking issues across popular services
+            Sign in to open support tickets, follow their status, and get help from our team.
           </Text>
         </VStack>
       </Box>

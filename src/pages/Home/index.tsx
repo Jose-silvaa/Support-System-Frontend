@@ -1,6 +1,6 @@
 import { Box } from "@chakra-ui/react"
 import { brand } from "@/theme/brand"
-import { CallToAction, Features, Footer, Hero, HowItWorks, TrendingIssues } from "./components"
+import { CallToAction, Features, Footer, Hero, HowItWorks, RecentTickets } from "./components"
 
 export function HomePage() {
   return (
@@ -8,7 +8,7 @@ export function HomePage() {
       <Hero />
       <Features />
       <HowItWorks />
-      <TrendingIssues />
+      <RecentTickets />
       <CallToAction />
       <Footer />
     </Box>

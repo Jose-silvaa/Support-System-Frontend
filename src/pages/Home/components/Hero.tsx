@@ -1,21 +1,22 @@
 import { Box, Button, Flex, HStack, Heading, Text, VStack } from "@chakra-ui/react"
 import { useNavigate } from "react-router-dom"
 import { ROUTES } from "@/routes/constants"
+import { TicketStatus } from "@/services/tickets/interfaces"
 import { brand } from "@/theme/brand"
-import { TRENDING_ISSUES } from "../data"
-import { IssueCard } from "./IssueCard"
+import { EXAMPLE_TICKETS } from "../data"
 import { Navbar } from "./Navbar"
+import { TicketPreviewCard } from "./TicketPreviewCard"
 
-/** As duas issues de exemplo usadas no preview do dashboard. */
-const PREVIEW_ISSUES = TRENDING_ISSUES.filter(
-  (issue) => issue.platform === "Discord" || issue.platform === "GitHub"
-)
+/** Os dois tickets de exemplo usados no preview do dashboard. */
+const PREVIEW_TICKETS = EXAMPLE_TICKETS.filter(
+  (ticket) => ticket.status === TicketStatus.Open || ticket.status === TicketStatus.InProgress
+).slice(0, 2)
 
 export function Hero() {
   const navigate = useNavigate()
 
-  function scrollToTrending() {
-    document.getElementById("trending")?.scrollIntoView({ behavior: "smooth" })
+  function scrollToTickets() {
+    document.getElementById("tickets")?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (
@@ -46,14 +47,14 @@ export function Hero() {
             letterSpacing="-0.01em"
             color="white"
           >
-            Report issues. Track problems.{" "}
+            Submit tickets. Track progress.{" "}
             <Text as="span" color={brand.accent}>
-              Stay informed.
+              Get support.
             </Text>
           </Heading>
           <Text fontSize={{ base: "md", md: "lg" }} color={brand.textMuted} maxW="480px" lineHeight="1.6">
-            A community platform where users report and follow issues affecting the services
-            they use every day.
+            The support desk where you can open tickets, follow their status, and get help
+            from your team — all in one place.
           </Text>
           <HStack gap="4" flexWrap="wrap" justify={{ base: "center", lg: "flex-start" }}>
             <Button
@@ -66,7 +67,7 @@ export function Hero() {
               _active={{ bg: brand.accentActive }}
               onClick={() => navigate(ROUTES.REGISTER)}
             >
-              Report an Issue
+              Create a Ticket
             </Button>
             <Button
               size="lg"
@@ -75,9 +76,9 @@ export function Hero() {
               color="white"
               px="8"
               _hover={{ bg: brand.surface }}
-              onClick={scrollToTrending}
+              onClick={scrollToTickets}
             >
-              Explore Issues
+              View Tickets
             </Button>
           </HStack>
         </VStack>
@@ -102,7 +103,7 @@ export function Hero() {
             <VStack align="stretch" gap="3" p="4">
               <Flex justify="space-between" align="center">
                 <Text fontSize="sm" fontWeight="semibold" color="white">
-                  Live issues
+                  Live tickets
                 </Text>
                 <HStack gap="1.5">
                   <Box w="2" h="2" borderRadius="full" bg={brand.success} />
@@ -111,8 +112,8 @@ export function Hero() {
                   </Text>
                 </HStack>
               </Flex>
-              {PREVIEW_ISSUES.map((issue) => (
-                <IssueCard key={issue.id} issue={issue} />
+              {PREVIEW_TICKETS.map((ticket) => (
+                <TicketPreviewCard key={ticket.id} ticket={ticket} />
               ))}
             </VStack>
           </Box>

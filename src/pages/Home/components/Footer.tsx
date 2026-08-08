@@ -3,8 +3,8 @@ import { brand } from "@/theme/brand"
 
 const FOOTER_LINKS = [
   { label: "About", href: "#" },
-  { label: "Issues", href: "#trending" },
-  { label: "Community", href: "#" },
+  { label: "Tickets", href: "#tickets" },
+  { label: "Support", href: "#" },
   { label: "Privacy", href: "#" },
   { label: "Terms", href: "#" },
 ] as const

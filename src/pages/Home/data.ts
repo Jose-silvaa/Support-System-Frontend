@@ -1,59 +1,48 @@
-import type { Issue } from "./interfaces"
+import { TicketStatus } from "@/services/tickets/interfaces"
+import type { TicketPreview } from "./interfaces"
 
-/** Dados de exemplo — quando existir um endpoint público de issues, substituir por dados reais. */
-export const TRENDING_ISSUES: Issue[] = [
+/** Tickets de exemplo para ilustrar a landing page (não vêm da API). */
+export const EXAMPLE_TICKETS: TicketPreview[] = [
   {
     id: "1",
-    platform: "Discord",
-    title: "Unable to connect to voice channels",
-    status: "investigating",
-    affectedUsers: 2481,
-    comments: 312,
-    updatedAt: "4m ago",
+    title: "Cannot reset my password",
+    status: TicketStatus.Open,
+    reporter: "Maria Silva",
+    updatedAt: "10m ago",
   },
   {
     id: "2",
-    platform: "Slack",
-    title: "Messages not sending in some workspaces",
-    status: "identified",
-    affectedUsers: 1204,
-    comments: 156,
-    updatedAt: "18m ago",
-  },
-  {
-    id: "3",
-    platform: "Cloudflare",
-    title: "Elevated error rates on API requests",
-    status: "monitoring",
-    affectedUsers: 3150,
-    comments: 401,
-    updatedAt: "42m ago",
-  },
-  {
-    id: "4",
-    platform: "Spotify",
-    title: "Playback issues on desktop app",
-    status: "investigating",
-    affectedUsers: 967,
-    comments: 88,
+    title: "Invoice #4821 shows the wrong amount",
+    status: TicketStatus.InProgress,
+    reporter: "John Peters",
     updatedAt: "1h ago",
   },
   {
-    id: "5",
-    platform: "GitHub",
-    title: "Repository access issues",
-    status: "resolved",
-    affectedUsers: 842,
-    comments: 64,
+    id: "3",
+    title: "App crashes when uploading a file",
+    status: TicketStatus.Open,
+    reporter: "Ana Costa",
+    updatedAt: "2h ago",
+  },
+  {
+    id: "4",
+    title: "Need access to the reporting dashboard",
+    status: TicketStatus.InProgress,
+    reporter: "Lucas Almeida",
     updatedAt: "3h ago",
   },
   {
-    id: "6",
-    platform: "AWS",
-    title: "Increased latency in us-east-1",
-    status: "resolved",
-    affectedUsers: 512,
-    comments: 47,
+    id: "5",
+    title: "Duplicate charge on my last invoice",
+    status: TicketStatus.Closed,
+    reporter: "Beatriz Rocha",
     updatedAt: "5h ago",
+  },
+  {
+    id: "6",
+    title: "Unable to update my profile picture",
+    status: TicketStatus.Closed,
+    reporter: "Pedro Santos",
+    updatedAt: "1d ago",
   },
 ]
