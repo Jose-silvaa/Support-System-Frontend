@@ -1,27 +1,27 @@
 import { Box, Grid, Heading, Text, VStack } from "@chakra-ui/react"
 import { brand } from "@/theme/brand"
-import { CommunityIcon, DiscoverIcon, ReportIcon, TrackIcon } from "./icons"
+import { OrganizeIcon, ReportIcon, ResolveIcon, TrackIcon } from "./icons"
 
 const FEATURES = [
   {
     icon: ReportIcon,
-    title: "Report Problems",
-    description: "Share issues you are experiencing and help others facing the same problem.",
+    title: "Submit Tickets",
+    description: "Open a ticket in seconds and describe exactly what you need help with.",
   },
   {
     icon: TrackIcon,
     title: "Track Progress",
-    description: "Follow updates and know when a problem is being investigated or resolved.",
+    description: "Follow your ticket from Open to In Progress to Closed, in real time.",
   },
   {
-    icon: CommunityIcon,
-    title: "Community Driven",
-    description: "Join thousands of users reporting and confirming issues together.",
+    icon: OrganizeIcon,
+    title: "Stay Organized",
+    description: "Keep every request, reporter, and update in one place.",
   },
   {
-    icon: DiscoverIcon,
-    title: "Discover Issues",
-    description: "Find existing problems before creating a new report.",
+    icon: ResolveIcon,
+    title: "Get Resolved Faster",
+    description: "Clear status and history mean less back-and-forth to get your issue solved.",
   },
 ] as const
 

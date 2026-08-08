@@ -1,10 +1,10 @@
 import { Box, Flex, HStack, Text } from "@chakra-ui/react"
 import { brand } from "@/theme/brand"
-import type { Issue } from "../interfaces"
-import { PlatformMark } from "./PlatformMark"
+import type { TicketPreview } from "../interfaces"
+import { ReporterAvatar } from "./ReporterAvatar"
 import { StatusBadge } from "./StatusBadge"
 
-export function IssueCard({ issue }: { issue: Issue }) {
+export function TicketPreviewCard({ ticket }: { ticket: TicketPreview }) {
   return (
     <Box
       bg={brand.surface}
@@ -17,7 +17,7 @@ export function IssueCard({ issue }: { issue: Issue }) {
     >
       <Flex justify="space-between" align="flex-start" gap="3">
         <HStack gap="3" align="flex-start">
-          <PlatformMark name={issue.platform} />
+          <ReporterAvatar name={ticket.reporter} />
           <Box>
             <Text
               fontSize="xs"
@@ -26,21 +26,17 @@ export function IssueCard({ issue }: { issue: Issue }) {
               textTransform="uppercase"
               letterSpacing="0.04em"
             >
-              {issue.platform}
+              {ticket.reporter}
             </Text>
             <Text fontSize="sm" color="white" fontWeight="medium" mt="0.5">
-              {issue.title}
+              {ticket.title}
             </Text>
           </Box>
         </HStack>
-        <StatusBadge status={issue.status} />
+        <StatusBadge status={ticket.status} />
       </Flex>
-      <Flex justify="space-between" align="center" mt="4" fontSize="xs" color={brand.textFaint} flexWrap="wrap" gap="2">
-        <HStack gap="4">
-          <Text>{issue.affectedUsers.toLocaleString()} affected</Text>
-          <Text>{issue.comments} comments</Text>
-        </HStack>
-        <Text>{issue.updatedAt}</Text>
+      <Flex justify="flex-end" mt="4" fontSize="xs" color={brand.textFaint}>
+        <Text>Updated {ticket.updatedAt}</Text>
       </Flex>
     </Box>
   )

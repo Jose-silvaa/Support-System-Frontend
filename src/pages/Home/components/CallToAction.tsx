@@ -19,10 +19,10 @@ export function CallToAction() {
         py={{ base: "12", md: "16" }}
       >
         <Heading as="h2" fontFamily="display" fontSize={{ base: "3xl", md: "4xl" }} fontWeight="600" color="white">
-          Stay informed about the services you use.
+          Need help? Open a ticket in minutes.
         </Heading>
         <Text fontSize="md" color="whiteAlpha.900" maxW="440px">
-          Create your account and never miss important updates about ongoing issues.
+          Create your account and start tracking your support requests today.
         </Text>
         <Button
           size="lg"

@@ -1,11 +1,10 @@
-export type IssueStatus = "investigating" | "identified" | "monitoring" | "resolved"
+import type { TicketStatus } from "@/services/tickets/interfaces"
 
-export interface Issue {
+/** Ticket de exemplo mostrado na landing page (hero + seção de tickets recentes). */
+export interface TicketPreview {
   id: string
-  platform: string
   title: string
-  status: IssueStatus
-  affectedUsers: number
-  comments: number
+  status: TicketStatus
+  reporter: string
   updatedAt: string
 }

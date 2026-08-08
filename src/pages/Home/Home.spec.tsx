@@ -10,7 +10,7 @@ describe("HomePage", () => {
         <HomePage />
       </MemoryRouter>
     )
-    expect(screen.getByRole("heading", { name: /report issues/i })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /report an issue/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 1, name: /submit tickets/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /create a ticket/i })).toBeInTheDocument()
   })
 })

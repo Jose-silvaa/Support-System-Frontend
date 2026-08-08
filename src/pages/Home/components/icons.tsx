@@ -34,22 +34,21 @@ export function TrackIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-export function CommunityIcon(props: SVGProps<SVGSVGElement>) {
+export function OrganizeIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <IconBase {...props}>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-      <circle cx="17" cy="7" r="2.5" />
-      <path d="M15.5 14.2c2.5.5 4.5 2.7 4.5 5.8" />
+      <rect x="3.5" y="4" width="17" height="4.5" rx="1" />
+      <rect x="3.5" y="10.75" width="17" height="4.5" rx="1" />
+      <rect x="3.5" y="17.5" width="17" height="4.5" rx="1" />
     </IconBase>
   )
 }
 
-export function DiscoverIcon(props: SVGProps<SVGSVGElement>) {
+export function ResolveIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <IconBase {...props}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.3-4.3" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.5 2.5L16 9.5" />
     </IconBase>
   )
 }

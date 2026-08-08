@@ -4,18 +4,18 @@ import { brand } from "@/theme/brand"
 const STEPS = [
   {
     number: "01",
-    title: "Report an issue",
-    description: "Describe the problem you're facing with a specific service in seconds.",
+    title: "Open a ticket",
+    description: "Describe your issue and submit it in seconds.",
   },
   {
     number: "02",
-    title: "Community confirms and discusses",
-    description: "Other affected users add their voice and details, validating the report.",
+    title: "Our team reviews it",
+    description: "Your ticket is picked up and moved to In Progress.",
   },
   {
     number: "03",
-    title: "Track resolution updates",
-    description: "Follow the status as it moves from investigating to resolved.",
+    title: "Track it to resolution",
+    description: "Follow every update until your ticket is marked Closed.",
   },
 ] as const
 

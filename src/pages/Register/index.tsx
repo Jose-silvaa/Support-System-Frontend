@@ -267,7 +267,8 @@ export function RegisterPage() {
             textAlign="center"
             lineHeight="1.6"
           >
-            Create your account to report issues, follow ongoing discussions, and receive updates as problems are resolved
+            Create your account to open support tickets and get help from our team, from first
+            report to resolution.
           </Text>
         </VStack>
       </Box>
