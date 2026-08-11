@@ -2,6 +2,7 @@ import {TabsComponent} from "@/shared/components/TabsComponent";
 import {useEffect, useState} from "react";
 import {getHistoryTicket} from "@/features/tickets/api/ticket.ts";
 import type {TicketHistory} from "@/features/tickets/types/ticket.types.ts";
+import {Box} from "@chakra-ui/react";
 
 interface TicketHistoryProps {
     ticketId: string;
@@ -24,7 +25,8 @@ export function TicketHistory({ticketId}: TicketHistoryProps){
 
                 setHistory(data);
 
-            } catch {
+            } catch (err){
+                console.error("Erro real:", err);
                 setError("Failed to load ticket history");
             } finally {
                 setLoading(false);
@@ -53,10 +55,9 @@ export function TicketHistory({ticketId}: TicketHistoryProps){
                                         <p>No history found.</p>
                                     ) : (
                                         history.map((item, index) => (
-                                            <div key={`${item.ticketId}-${index}`}>
+                                            <Box mb="20px" key={`${item.ticketId}-${index}`} className="">
                                                 <p>{item.description}</p>
-                                                <small>{item.type}</small>
-                                            </div>
+                                            </Box>
                                         ))
                                     )}
                                 </>
