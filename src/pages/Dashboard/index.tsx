@@ -25,6 +25,7 @@ import {
 } from "@/services/users/users.service"
 import type { DashboardCard } from "@/services/tickets/interfaces"
 import { TicketStatus } from "@/services/tickets/interfaces"
+import {TicketHistory} from "@/features/tickets/components/TicketHistory.tsx";
 
 const COLUMNS: {
   status: TicketStatus
@@ -101,6 +102,7 @@ export function DashboardPage() {
       .then(setAssignableUsers)
       .catch(() => setAssignableUsers([]))
   }, [])
+
 
   useEffect(() => {
     if (editingCard) {
@@ -436,6 +438,9 @@ export function DashboardPage() {
                       Save
                     </Button>
                   </HStack>
+                  {editingCard?.id && (
+                      <TicketHistory ticketId={editingCard.id}/>
+                  )}
                 </form>
               </AppCard>
             </Box>
