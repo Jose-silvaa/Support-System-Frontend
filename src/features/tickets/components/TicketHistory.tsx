@@ -1,13 +1,21 @@
 import {TabsComponent} from "@/shared/components/TabsComponent";
 import {useEffect, useState} from "react";
 import {getHistoryTicket} from "@/features/tickets/api/ticket.ts";
-import type {TicketHistory} from "@/features/tickets/types/ticket.types.ts";
-import {Box} from "@chakra-ui/react";
+import {TicketActivityType, type TicketHistory} from "@/features/tickets/types/ticket.types.ts";
+import {Box, Text} from "@chakra-ui/react";
+import {formatDistanceToNow} from "date-fns/formatDistanceToNow";
+import {ptBR} from "date-fns/locale/pt-BR";
 
 interface TicketHistoryProps {
     ticketId: string;
 }
 
+function tempoRelativo(dataISO: string | Date) {
+    return formatDistanceToNow(new Date(dataISO), {
+        addSuffix: true,
+        locale: ptBR,
+    });
+}
 
 export function TicketHistory({ticketId}: TicketHistoryProps){
 
@@ -15,6 +23,46 @@ export function TicketHistory({ticketId}: TicketHistoryProps){
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+
+    function verifyAction(item: TicketActivityType, email: string){
+        const actions = {
+            [TicketActivityType.StatusChanged]: {
+                action: "changed the",
+                target: "Status",
+            },
+            [TicketActivityType.CommentAdded]: {
+                action: "added a",
+                target: "Comment",
+            },
+            [TicketActivityType.CommentEdited]: {
+                action: "edited a",
+                target: "Comment",
+            },
+            [TicketActivityType.DescriptionChanged]: {
+                action: "changed the",
+                target: "Description",
+            },
+            [TicketActivityType.TitleChanged]: {
+                action: "changed the",
+                target: "Title",
+            },
+        };
+
+        const action = actions[item];
+
+        if (!action) {
+            return null;
+        }
+
+        return (
+            <p>
+                {email} {action.action}{" "}
+                <Text as="span" fontWeight="semibold">
+                    {action.target}
+                </Text>
+            </p>
+        );
+    }
 
     useEffect(() => {
         async function loadHistory() {
@@ -25,8 +73,7 @@ export function TicketHistory({ticketId}: TicketHistoryProps){
 
                 setHistory(data);
 
-            } catch (err){
-                console.error("Erro real:", err);
+            } catch {
                 setError("Failed to load ticket history");
             } finally {
                 setLoading(false);
@@ -56,7 +103,8 @@ export function TicketHistory({ticketId}: TicketHistoryProps){
                                     ) : (
                                         history.map((item, index) => (
                                             <Box mb="20px" key={`${item.ticketId}-${index}`} className="">
-                                                <p>{item.description}</p>
+                                                <p>{verifyAction(item.type, item.email)}</p>
+                                                <Text textStyle="xs" fontWeight="light" >{tempoRelativo(item.createdAt)}</Text>
                                             </Box>
                                         ))
                                     )}
